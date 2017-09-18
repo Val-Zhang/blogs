@@ -18,4 +18,6 @@
 
 ![mulitPageDemo](./mulitPageDemo.gif)
 
+部分配置参考了[banmunongtian/react-es6-webpack](https://github.com/banmunongtian/react-es6-webpack/blob/master/webpack.config.js)
+
 
