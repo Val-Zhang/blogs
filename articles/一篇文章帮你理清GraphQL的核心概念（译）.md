@@ -499,12 +499,12 @@ npm install express body-parser apollo-server-express graphql graphql-tools loda
 
 在浏览器中打开，http://localhost:3000/graphiql，输入查询即可看到结果。
 
-![IMAGE](quiver-image-url/2FCC013A0B7F9BF72EB13CE34497D4AF.jpg =1437x552)
+![IMAGE](https://github.com/zhangwang1990/blogs/blob/master/articles/imgs/graphql-tool-demo.jpg?raw=true)
 
 
 ## 一些有用的链接
 
 - [《Getting up and running with GraphQL》](https://blog.pusher.com/getting-up-and-running-with-graphql/)
 - [howtographql](https://www.howtographql.com)
-- [译文在Github上的链接]()
+- [译文在Github上的链接](https://github.com/zhangwang1990/blogs/blob/master/articles/%E4%B8%80%E7%AF%87%E6%96%87%E7%AB%A0%E5%B8%AE%E4%BD%A0%E7%90%86%E6%B8%85GraphQL%E7%9A%84%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%EF%BC%88%E8%AF%91%EF%BC%89.md)
 
