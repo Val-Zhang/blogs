@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:prod": "webpack --progress --colors --watch --config webpack.prod.js",
     "build:dev": "webpack --progress --colors --watch --config webpack.dev.js",
-    "start": "webpack-dev-server --open --config webpack.dev.js"
+    "start": "webpack-dashboard -- webpack-dev-server --open --config webpack.dev.js"
   },
   "keywords": [],
   "author": "zhangwang",
@@ -34,6 +34,7 @@
     "uglifyjs-webpack-plugin": "^0.4.6",
     "webpack": "^3.6.0",
     "webpack-bundle-analyzer": "^2.9.0",
+    "webpack-dashboard": "^1.0.2",
     "webpack-dev-server": "^2.8.2"
   },
   "dependencies": {

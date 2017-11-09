@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 let CleanWebpackPlugin = require("clean-webpack-plugin");
 const glob = require('glob');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
-
+const DashboardPlugin = require('webpack-dashboard/plugin')
 
 const entry = {
     vendors: ["react", "react-dom"]
@@ -49,6 +49,7 @@ const
             },
             allChunks: true
         }),
+        new DashboardPlugin()
     ];
 
 function getEntry(globPath, pathDir) {
