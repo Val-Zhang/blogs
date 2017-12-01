@@ -251,4 +251,106 @@ app.use(['/adm*n', '/manager'], admin); // load the 'admin' router on '/adm*n' a
 
 > 次级app还可以再拥有次级app，如果如此，那次级app和router的区别在哪儿呢？
 
+### Events
+
+#### `app.on('mount',callback(parent))`
+
+`mount`事件在`sub-app`挂载（mount）到父app时触发，父app会被参数传入回调函数中。
+
+> **Note:**
+> Sub-app将：
+> 
+> 	- 不继承`settings`中的默认值，在sub-app中需要重新设置；
+> 	- 将继承没有默认值的`settings`中的值
+
+```js
+var admin = express();
+
+admin.on('mount', function (parent) {
+  console.log('Admin Mounted');
+  console.log(parent); // refers to the parent app
+});
+
+admin.get('/', function (req, res) {
+  res.send('Admin Homepage');
+});
+
+app.use('/admin', admin);
+```
+
+### Methods
+
+#### `app.all(path,callback[,callback])`
+
+此方法类似标准的[`app.MEYHOD()`](http://expressjs.com/zh-cn/4x/api.html#app.METHOD)方法，不同的地方在于它将匹配所有的`http`请求。
+
+##### 参数
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+##### 示例
+
+以下回调将响应`GET`，`POST`，`PUT`，`DELETE`或任何其他HTTP请求方法对路由`/secret`的请求：
+
+```js
+app.all('/secret', function (req, res, next) {
+  console.log('Accessing the secret section ...')
+  next() // pass control to the next handler
+});
+```
+
+`app.all()`方法在处理对某特定的前缀或匹配的特殊路径的所有类型的请求时特别有用。比如说如果你把下述代码放在所有其它路径的定义之前，就会让从此代码之后的所有路由都需要身份验证，并自动加载一个user。这些回调也不必做为终点，`loadUser`可以用来执行某个任务，然后调用`next()`来继续匹配之后的路由。
+
+```js
+app.all('*', requireAuthentication, loadUser);
+```
+
+上述代码也等同于
+
+```js
+app.all('*', requireAuthentication);
+app.all('*', loadUser);
+```
+
+下面还有另外一个非常好用的全局函数示例，这个例子和上面那个类似，但是严格限制路径以`/api`开头
+
+```js
+app.all('/api/*', requireAuthentication);
+```
+
+#### `app.delete(path, callback [, callback ...])`
+
+
+
+
+
+
+
 
