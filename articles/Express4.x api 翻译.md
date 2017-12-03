@@ -347,6 +347,300 @@ app.all('/api/*', requireAuthentication);
 
 #### `app.delete(path, callback [, callback ...])`
 
+绑定针对某特定路径的HTTP DELETE请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
+
+##### 参数
+
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+
+##### 示例
+
+```js
+app.delete('/', function (req, res) {
+  res.send('DELETE request to homepage');
+});
+```
+
+#### `app.disable(name)`
+
+设置setting中的布尔值属性`name`值为`false`，`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。调用`app.set('foo',false)`和调用`app.disable('foo')`的效果一致：
+
+如：
+
+```js
+app.disable('trust proxy');
+app.get('trust proxy');
+// => false
+```
+
+#### `app.disabled(name)`
+
+如果`setting`中的设置项`name`的值为`false`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
+
+```js
+app.disabled('trust proxy');
+// => true
+
+app.enable('trust proxy');
+app.disabled('trust proxy');
+// => false
+```
+
+#### `app.enable(name)`
+
+设置`setting`中的布尔值设置项`name`为`true`,调用`app.enable('foo')`和调用`app.set('foo',true)`效果相同。
+
+```js
+app.enable('trust proxy');
+app.get('trust proxy');
+// => true
+```
+
+#### `app.enabled(name)`
+
+如果`setting`中的设置项`name`的值为`true`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
+
+```js
+app.enabled('trust proxy');
+// => false
+
+app.enable('trust proxy');
+app.enabled('trust proxy');
+// => true
+```
+
+#### `app.engine(ext,callback)`
+
+注册给定的模板引擎的回调函数为`ext`。
+
+默认情况下，Express将会基于拓展名`require()`引擎，比如说，如果你渲染文件`foo.pug`,Express将在内部触发以下代码，并会为接下来的请求缓存`require()`以提高性能。
+
+```js
+app.engine('pug', require('pug').__express);
+```
+
+对不提供直接可用的`.__express`的引擎，或者你想把不同的后缀映射到当前引擎可以使用下述方法，
+
+比如说，你想使用EJS引擎来渲染`.html`文件
+
+```js
+app.engine('html', require('ejs').renderFile);
+```
+
+在上面的例子中，`renderFile()`方法提供了`Express`想要的相同的签名（`path`,`options`,`callback`）,不过请注意这个方法会自动在内部调用`ejx.__express)`所以如果你想要渲染的文件的后缀是`.ejx`,则不需要调用做别的事情。
+
+也有一些模板引擎不遵循这个约定，[consolidate.js](https://github.com/tj/consolidate.js)库可以映射 Node 模板引擎为准守这种规律，所以他们可以和Express无缝链接使用。
+
+```js
+var engines = require('consolidate');
+app.engine('haml', engines.haml);
+app.engine('html', engines.hogan);
+```
+
+#### `app.get(name)`
+
+返回app setting 中相关的`name`的值，如：
+
+```js
+app.get('title');
+// => undefined
+
+app.set('title', 'My Site');
+app.get('title');
+// => "My Site"
+```
+
+#### `app.get(path,callback[,callback])`
+
+使用特定的回调函数处理特定路径的HTTP GET请求
+
+##### 参数
+
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+更多信息可参考[routing 指南](http://expressjs.com/guide/routing.html)
+
+
+#### `app.listen(path,[callback])`
+
+启动UNIX套接字并侦听给定路径上的连接。此方法等同于Node的[`http.Server.listen()`](https://nodejs.org/api/http.html#http_server_listen_path_callback)方法.
+
+```js
+var express = require('express');
+var app = express();
+app.listen('/tmp/sock');
+```
+
+#### `app.listen(port,[hostname],[backlog],[callback])`
+
+绑定并监听对指定的host和端口的连接。此方法和Node的[`http.Server.listen()`](https://nodejs.org/api/http.html#http_server_listen_path_callback)方法一致。
+
+```js
+var express = require('express');
+var app = express();
+app.listen(3000);
+```
+
+由`express()`方法返回的`app`实际上是一个JavaScript `Function`,它被设计为传递给Node的HTTP servers作为回调函数来处理请求。由于 app 并没有什么继承，这使得可以非常方便使用同一套代码提供`http`或`https`版本的app。
+
+```js
+var express = require('express');
+var https = require('https');
+var http = require('http');
+var app = express();
+
+http.createServer(app).listen(80);
+https.createServer(options, app).listen(443);
+```
+
+`app.listen()`方法返回一个`http.Server`对象，对于`http`来说，它可以像下面这样非常容易使用
+
+```js
+app.listen = function() {
+  var server = http.createServer(this);
+  return server.listen.apply(server, arguments);
+};
+```
+
+#### `app.METHOD(path,callback[,callback])`
+
+依据请求的类型处理http请求，请求类型可以是`GET,PUT,POST`等等的小写模式。因此，实际的方法是`app.get()`,`app.post()`,`app.put()`等等。[点击这里](http://expressjs.com/zh-cn/4x/api.html#routing-methods)可以查看详细的路由方法清单。
+
+##### 参数
+
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+
+##### 路由方法
+
+Express下述路由方法，它们和对应的HTTP方法具有相同的名称
+
+- checkout
+- copy
+- delete
+- get
+- head
+- lock
+- merge
+- mkactivity
+- mkcol
+- move
+- m-search
+- notify
+- options
+- patch
+- post
+- purge
+- put
+- report
+- search
+- subscribe
+- trace
+- unlock
+- unsubscribe
+
+本`API`文档中只对常用的HTTP方法进行了描述，如`app.get()`,`app.post()`,`app.put()`以及`app.delete()`。不过上面列出的其它方法使用方法也是类似的
+
+对于无效的JavaScript变量名类型，可以使用中括号来调用，比如`app['m-search']('/', function ....`
+
+> 如果没有在`app.get()`前指定`HTTP HEAD`对应的方法，将会调用`app.get()`响应`HEAD`请求。
+
+`app.all`并不对应某个特定的HTTP方法，而是会响应针对某个特定路径的所有请求，详细可[参看](http://expressjs.com/zh-cn/4x/api.html#app.all)。
+
+更多信息可参考[routing 指南](http://expressjs.com/guide/routing.html)
+
+#### `app.param([name],callback)`
+
+
+
+
+
+
 
 
 
