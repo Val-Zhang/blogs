@@ -636,7 +636,280 @@ Express下述路由方法，它们和对应的HTTP方法具有相同的名称
 
 #### `app.param([name],callback)`
 
+为路由参数添加回调函数，其中`name`是参数名或参数组成的数组，`callback`是回调函数。回调函数的参数依次是请求对象(request)，响应对象(response),下一个中间件，参数值及参数名。
 
+如果`name`是一个数组，回调函数会按照它们声明的顺序被注册到其中的每个值。此外除了最后一个声明的参数，回调函数中的`next`将会触发下一个注册参数的回调函数，而对于最后一个参数，`next`则会调用处理当前路由的下一个中间件，此时的处理就像`name`只是一个字符串一样。
+
+比如说当`:user`存在于路由的路径中时，你可能想映射用户加载逻辑以自动提供`req.user`给路由或者对参数输入执行验证。
+
+```js
+app.param('user', function(req, res, next, id) {
+
+  // try to get the user details from the User model and attach it to the request object
+  User.find(id, function(err, user) {
+    if (err) {
+      next(err);
+    } else if (user) {
+      req.user = user;
+      next();
+    } else {
+      next(new Error('failed to load user'));
+    }
+  });
+});
+```
+
+Param 回调函数对于它们定义的路由来说是本地的。它们不会被载入的app及router继承。因此，定义在`app`上的参数回调只会被定义在`app`路由上的路由参数触发。
+
+所有的参数回调将会在任何匹配该路由的处理函数前触发，并且在一个请求响应周期内只会被触发一次，即使参数匹配了多个路由也是如此。
+
+```js
+app.param('id', function (req, res, next, id) {
+  console.log('CALLED ONLY ONCE');
+  next();
+});
+
+app.get('/user/:id', function (req, res, next) {
+  console.log('although this matches');
+  next();
+});
+
+app.get('/user/:id', function (req, res) {
+  console.log('and this matches too');
+  res.end();
+});
+```
+
+对于请求`GET /user/42`将打印以下语句：
+
+```bash
+CALLED ONLY ONCE
+although this matches
+and this matches too
+```
+
+```js
+app.param(['id', 'page'], function (req, res, next, value) {
+  console.log('CALLED ONLY ONCE with', value);
+  next();
+});
+
+app.get('/user/:id/:page', function (req, res, next) {
+  console.log('although this matches');
+  next();
+});
+
+app.get('/user/:id/:page', function (req, res) {
+  console.log('and this matches too');
+  res.end();
+});
+```
+
+对于请求 `GET /user/42/3`,下面语句将被打印
+
+```bash
+CALLED ONLY ONCE with 42
+CALLED ONLY ONCE with 3
+although this matches
+and this matches too
+```
+
+> 源文档中此处有一段已经自Express4.10弃用，此处不再做翻译
+
+#### `app.path`
+
+返回应用程序的规范路径其是一个字符串。
+
+```js
+var app = express()
+  , blog = express()
+  , blogAdmin = express();
+
+app.use('/blog', blog);
+blog.use('/admin', blogAdmin);
+
+console.log(app.path()); // ''
+console.log(blog.path()); // '/blog'
+console.log(blogAdmin.path()); // '/blog/admin'
+```
+
+对于那些特别复杂加载了特别多`app`的程序，此行为会变得很复杂，通常情况下使用`req.baseUrl`来获取app规范路径更好。
+
+#### `app.post(path,callback[,callback])`
+
+绑定针对某特定路径的HTTP POST请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
+
+
+##### 参数
+
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+
+##### 示例
+
+```js
+app.post('/', function (req, res) {
+  res.send('POST request to homepage');
+});
+```
+
+#### `app.put(path,callback[,callback])`
+
+绑定针对某特定路径的HTTP POST请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
+
+
+##### 参数
+
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+
+
+##### 示例
+
+```js
+app.put('/', function (req, res) {
+  res.send('PUT request to homepage');
+});
+```
+
+#### `app.render(view,[locals],callback)`
+
+通过回调函数返回某个视图对应渲染出的`HTML`，它接收一个可选的参数，这个参数是一个对象用以像视图传送本地变量。`app.render()`很像`res.render()`区别在于它本身不能发送渲染后的视图给客户端。
+
+> 可以把`app.render()`看做用于生成视图字符串的实用函数。事实上，`res.render()`在内部会使用`app.render()`来渲染视图。
+
+> 本地变量`cache`被用来设置启用视图缓存，如果你想要在开发过程中启用，你需要将其设置为`true`，视图缓存在生产环境中默认被启用。
+
+```js
+app.render('email', function(err, html){
+  // ...
+});
+
+app.render('email', { name: 'Tobi' }, function(err, html){
+  // ...
+});
+```
+
+#### `app.route(path)`
+
+返回单一路由的实例，你可以使用不同的可选中间件来处理不同类型的请求。使用`app.route()`可以避免重复的写路由名及由此造成的输入错误。
+
+```js
+var app = express();
+
+app.route('/events')
+.all(function(req, res, next) {
+  // runs for all HTTP verbs first
+  // think of it as route specific middleware!
+})
+.get(function(req, res, next) {
+  res.json(...);
+})
+.post(function(req, res, next) {
+  // maybe add a new event...
+});
+```
+
+#### `app.set(name,value)`
+
+设置属性`name` 为 `value`,你可以保存任何你想用的值，不过一些特定名称被用来配置浏览器的行为。
+
+前面已经提到过，调用`app.set('foo',true)`设置布尔值为`true`与使用`app.enable('foo')`相同，类似的，调用`app.set('foo',false)`与`app.disable('foo')`相同。
+
+使用`app.get`可以获取设定的值。
+
+```js
+app.set('title', 'My Site');
+app.get('title'); // "My Site"
+```
+
+##### 应用设定
+
+下表列出了应用设定
+
+请注意`sub-app`具有以下特征：
+
+- 不会继承具有默认值的`settings`的值，其值必须在`sub-app`中设置；
+- 会继承没有默认值的值，这些会在下表中明确提到。
+
+例外： 
+
+> Sub-apps将继承`trust proxy`的值，尽管它有默认值，这样做是出于向后兼容的目的；Sub-apps 在生产环境中不会继承`view cache`的值(当 `NODE_ENV` 设置为 `production`)。
+
+| 属性 | 类型 | 描述 | 默认值 | 
+| --- | ----| -----| ------|
+|`case sensitive routing`| Boolean| 启用大小写敏感，当启用时，`/Foo`和`/foo`是不同的路由，当禁用时，`/Foo`和`/foo`将被看做一样的，**注意：**Sub-app将继承此值| `N/A(undefined)`|
+|`env`| String | 设置环境模式，请务必在生产环境中设置为`production`;详见[ Production best practices: performance and reliability.](http://expressjs.com/advanced/best-practice-performance.html#env)|`process.env.NODE_ENV`(Node_ENV环境变量)或如果`NODE_ENV`没有设置则为`development`|
+|`etag`| Varied | 设置`Etag`响应头。可选值可参考[options table](http://expressjs.com/zh-cn/4x/api.html#etag.options.table)，更多关于Etag可以参考 [维基百科--Etag](http://en.wikipedia.org/wiki/HTTP_ETag) | weak|
+|`jsonp callback name`|String|指定默认的JSONP的回调名称|"callback"|
+|`json escape`| Boolean | 对来自`res.josn`,`res.josnp`以及`res.send`的JSON响应启用转义，会转义JSON中的`<`,`>`,`&`为Unicode。此设置的目的在于当响应来自HTML的响应时协助[缓解某些类型的持续XSS攻击](https://blog.mozilla.org/security/2017/07/18/web-service-audits-firefox-accounts/)。**注意：**sub-app将继承此值的设置|`N/A(undefined)`|
+|`josn replacer`| Varied | 指定`JSON.stringly`使用的`replacer`参数 **注意：**Sub-app将继承此值在setting中的设置|`N/A(undefined)`|
+|`json spaces`| Varied | 指定`JSON.stringly`使用的`space`参数，此值被用来设置用于美化缩进的空格数量，**注意：**`Sub-app`将继承此值|`N/A(undefined)`|
+|`query parser`| Varied | 设置该值为`false`将禁用`query`解析，也可以设置其值为`simple`或`extended` 或者一个自定义的查询字符串解析函数。 最简单的query parser是基于Node的原生query parser[`querystring`](http://nodejs.org/api/querystring.html) ，拓展的query parser基于`qs`。 自定义的查询字符串解析函数将接收完整的查询字符串，并且必须返回一个有查询名和它们的值组成的对象|"extended"|
+|`strict routing`| Boolean | 启用严格路由模式，当启用时，路由将视`/foo`和`/foo/`为不同的路由。否则设为相同的路由 **注意：** Sub-app将继承此设置|`N/A (undefined)`|
+|`subdomain offset`| Number | 为了获取子域名需要移除的由点隔开的部分|2|
+| `trust proxy` | Varied | 只是应用程序位于前置代理之后，使用`X-Forwarded-*`请求头来确定客户端的IP地址及连接，**注**：`X-Forwarded- *`标头容易伪造，检测到的IP地址不可靠。 启用后，Express会尝试确定通过前置代理或一系列代理连接的客户端的IP地址，`req.ips`属性将包含连接的客户端的IP地址组成的数组。要启用它，可以查看[trust proxy options table](http://expressjs.com/zh-cn/4x/api.html#trust.proxy.options.table);`trust proxy`的设置使用了[proxy-addr](https://www.npmjs.org/package/proxy-addr)包，可以查看其文档了解更多内容。 **注：** 尽管包含默认值，sub-apps会继承其值|`false(disabled)`|
+|`views`|String/Array| 供程序视图使用的一个或一组文件夹，如果是一个文件夹，将按照数组值的顺序查找 | `process.ced() + '/views'`|
+|`view cache`| Boolean | 启用视图模板汇编缓存，**注：**Sub-apps不会鸡翅此值在生产环境中的设置(当`NODE_ENV`设置为`producetion`时)。|生产环境上默认为`true`，否则为`undefined`|
+|`view engine`| String | 省略时使用默认的引擎拓展 **注：**Sub-app将继承此值的设置|`N/A(undefined)`|
+|`x-powered-by`|Boolean|启用`X-Powered-By:Express` HTTP 头部| `true`|
+
+##### `trust proxy`的可用设置值
 
 
 
