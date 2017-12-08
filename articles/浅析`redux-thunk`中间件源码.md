@@ -26,7 +26,7 @@ thunk.withExtraArgument = createThunkMiddleware;
 export default thunk;
 ```
 
-`redux-thunk`的源码非常简洁，出去空格一共只有**11行**，这11行中如果不算上`}`,则只有8行。最后三行模块的导出方法很好理解，
+`redux-thunk`的源码非常简洁，除去空格一共只有**11行**，这11行中如果不算上`}`,则只有8行。最后三行模块的导出方法很好理解，
 
 ```js
 // thunk的内容如下
