@@ -911,6 +911,85 @@ app.get('title'); // "My Site"
 
 ##### `trust proxy`的可用设置值
 
+参考[Express behind proxies](http://expressjs.com/guide/behind-proxies.html)可获取更多的信息。
+
+|类型|值|
+|---|---|
+|`Boolean`|如果设置为`true`,客户端的IP地址将被认为是`X-Forwarded- *`头中最左边的条目，如果设置为`false`,后端应用被认为直接与互联网连接，并入客户端的`IP`地址可以从`req.connection.remoteAddress`中获取，这也是默认的设置。|
+|字符串/逗号分隔的字符串/字符串构成的数组|一个IP地址，`subnet`或者一组IP地址和一组可信任的子网的组合，以下列表显示了预配置的子网名称： `loopback - 127.0.0.1/8, ::1/128`,`linklocal - 169.254.0.0/16, fe80::/10`,`uniquelocal - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7`,你可以用下列方法设置IP地址,指定单一的子网 `app.set('trust proxy', 'loopback') `,指定一个子网及地址`app.set('trust proxy', 'loopback, 123.123.123.123') `,指定多个子网为CSV,`app.set('trust proxy', 'loopback, linklocal, uniquelocal') `,通过数组格式指定多个子网`app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])`,指定时，将从地址确定过程中排除IP地址或子网，并将离应用程序服务器最近的不可信IP地址确定为客户端的IP地址。|
+|`Number`| 信任从前置代理服务器作为客户端的第nth hop。|
+|`Function`| 自定义代理实现，只有当你知道你在做啥的时候才应该做这一步,实例如下|
+
+```js
+app.set('trust proxy', function (ip) {
+  if (ip === '127.0.0.1' || ip === '123.123.123.123') return true; // trusted IPs
+  else return false;
+});
+```
+
+#### `etag`选项的配置
+
+> **注意:** 这些设置只适用于动态生成的文件而不适于静态文件，`express.static`中间件将忽略这些设置。
+> 
+> ETag功能是使用etag软件包实现的。有关更多信息，可参阅其[文档](https://www.npmjs.org/package/etag)。
+
+|类型|值|
+|---|---|
+|`Boolean`|设置为`true`将允许`weak Etag`,这是默认的设置，设置为`false`将禁用`Etag`|
+|`String` |设置为`strong`,将允许`strong Etag`,设置为`weak`,将允许`weak Etag`|
+|`Function`|自定义代理实现，只有当你知道你在做啥的时候才应该做这一步,实例如下|
+
+```js
+app.set('etag', function (body, encoding) {
+  return generateHash(body, encoding); // consider the function is defined
+});
+```
+
+### `app.use([path],callback[,callback])`
+
+为指定的路径指定中间件函数，当请求的路径与之匹配时，中间件函数将会被执行。
+
+**参数**
+
+**参数1：** `path`   **默认值：** `/`(root path)
+
+**参数描述：**
+
+> 中间件被触发的路径，可以是以下值中的一种：
+> 
+> 	- 用字符串表达的路径
+> 	- 匹配路径的正则表达式
+> 	- 路径模式
+> 	- 上述值组成的数组
+> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+
+**参数2：** `callback`   **默认值：** `None`
+
+**参数描述：**
+
+> 回调函数可以是如下中的一种：
+> 
+> 	- 一个中间件函数
+> 	- 由逗号隔开的一系列中间件函数
+> 	- 一个由中间件函数构成的数组
+> 	- 上述情况的组合
+> 
+> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 
+> 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
+> 
+
+**描述**
+
+路径将会匹配任何当前路径后面加`/`的路径，如`app.use('/apple',...)`将匹配`/apple`,`/apple/images`,`/apple/images/news`等等。
+
+
+
+
+
+
 
 
 
