@@ -985,10 +985,208 @@ app.set('etag', function (body, encoding) {
 
 路径将会匹配任何当前路径后面加`/`的路径，如`app.use('/apple',...)`将匹配`/apple`,`/apple/images`,`/apple/images/news`等等。
 
+由于默认的路径就是`/`，如果不设置路径，所用中间件将响应每一个请求。
 
+比如说下述中间件函数将响应每一个请求
 
+```js
+app.use(function (req, res, next) {
+  console.log('Time: %d', Date.now());
+  next();
+});
+```
 
+> 请注意sub-app具有以下特征：
+> 
+> - 不会继承具有默认值的settings的值，其值必须在sub-app中设置；
+> - 会继承没有默认值的值，这些会在下表中明确提到。
 
+中间件函数将会按照顺序执行，因此中间件的顺序非常重要。
+
+```js
+// 请求不会超出下面的中间件
+app.use(function(req, res, next) {
+  res.send('Hello World');
+});
+
+// 请求永远不会到达下面的路由
+app.get('/', function (req, res) {
+  res.send('Welcome');
+});
+```
+
+#### 错误处理中间件
+
+错误处理中间件需要接受四个参数，使用时必须传入四个参数以证明这是个错误处理中间件。即使你用不上`next`,也需要在参数中包含它，这样才能满足此中间件的函数签名。否则会被当做普通的中间件而失去处理错误的能力。关于错误处理中间件的详细信息可以参考[这里](http://expressjs.com/en/guide/error-handling.html)。
+
+除了需要接受四个而非三个参数，错误处理中间件的定义和普通中间件一样，函数签名固定为`(err,req,res,next)`
+
+```js
+app.use(function(err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+```
+
+### 路径写法示例
+
+下表是一些有效的路径示例
+
+**type:** `path`:
+**示例：**
+
+将匹配以`/abcd`开头的路径：
+
+```js
+app.use('/abcd', function (req, res, next) {
+  next();
+});
+```
+
+**type:** 路径通配符
+
+```js
+// 下述将匹配以'/abcd'和'/abd'开头的路径
+app.use('/abc?d', function (req, res, next) {
+  next();
+});
+
+// 下例将匹配以'/abcd','/abbcd','/abbbbbcd'等开头的路径
+app.use('/ab+cd', function (req, res, next) {
+  next();
+});
+
+// 下例将匹配以 '/abcd','/abxcd','/abFOOcd','/abbArcd'等开头的路径
+app.use('/ab\*cd', function (req, res, next) {
+  next();
+});
+
+// 下例将匹配 '/ab' 或 '/abcd'开头的路径
+
+app.use('/a(bc)?d', function (req, res, next) {
+  next();
+});
+```
+
+**type:** 正则表达式
+
+```js
+// 下例将匹配以'/abc','/xyz'开头的路径
+app.use(/\/abc|\/xyz/, function (req, res, next) {
+  next();
+});
+
+```
+
+**type:** 数组
+
+```js
+// 下例将匹配以'/abcd','/xyza','/lmn','/pqr'开头的路径
+app.use(['/abcd', '/xyza', /\/lmn|\/pqr/], function (req, res, next) {
+  next();
+});
+```
+
+### 中间件回调函数示例
+
+下面的示例展示了`app.use()`,`app.METHOD()`,`app.all()`中中间件函数的使用方法。
+
+**单个中间件**
+
+```js
+// 可用直接写中间件函数
+app.use(function (req, res, next) {
+  next();
+});
+
+// router也是一个有效的中间件
+var router = express.Router();
+router.get('/', function (req, res, next) {
+  next();
+});
+app.use(router);
+
+// Express app也是一个有效的中间件
+var subApp = express();
+subApp.get('/', function (req, res, next) {
+  next();
+});
+app.use(subApp);
+```
+
+**一系列的中间件**
+
+```js
+// 针对同一个路径可用指定多个中间件
+var r1 = express.Router();
+r1.get('/', function (req, res, next) {
+  next();
+});
+
+var r2 = express.Router();
+r2.get('/', function (req, res, next) {
+  next();
+});
+
+app.use(r1, r2);
+```
+
+**数组**
+
+```js
+// 可传入一个中间件数组，如果中间件数组是第一个或者唯一的一个参数，则你必须指定中间件匹配的路径
+
+var r1 = express.Router();
+r1.get('/', function (req, res, next) {
+  next();
+});
+
+var r2 = express.Router();
+r2.get('/', function (req, res, next) {
+  next();
+});
+
+app.use('/', [r1, r2]);
+```
+
+**组合**
+
+```js
+// 你可以组合使用上述所有的中间件
+function mw1(req, res, next) { next(); }
+function mw2(req, res, next) { next(); }
+
+var r1 = express.Router();
+r1.get('/', function (req, res, next) { next(); });
+
+var r2 = express.Router();
+r2.get('/', function (req, res, next) { next(); });
+
+var subApp = express();
+subApp.get('/', function (req, res, next) { next(); });
+
+app.use(mw1, [mw2, r1, r2], subApp);
+```
+
+下面是一些在`Express App`中使用[express.static](http://expressjs.com/guide/using-middleware.html#middleware.built-in)中间件的示例。
+
+```js
+// 把应用目录下的`public`文件夹中的内容作为静态内容的方法
+// GET /style.css etc
+app.use(express.static(__dirname + '/public'));
+
+// 匹配 以/static开头的路径以提供静态内容
+app.use('/static', express.static(__dirname + '/public'));
+
+// 通过把logger中间件放在静态中间件之后使得请求静态内容时不logging
+app.use(express.static(__dirname + '/public'));
+app.use(logger());
+
+// 从多个目录中提供静态文件，不过优先使用`./public`中的内容
+app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/files'));
+app.use(express.static(__dirname + '/uploads'));
+```
 
 
 
