@@ -1188,9 +1188,186 @@ app.use(express.static(__dirname + '/files'));
 app.use(express.static(__dirname + '/uploads'));
 ```
 
+## `Request`
+
+`req`对象代表的是`http`请求，并且具备由请求的`query`,参数，`body`,`HTTP headers`等解析而来的属性。按照惯例（此文档也是如此）这个对象会被解析为`req`(`HTTP`响应对象记为`res`),不过这个名字具体是什么还是依据回调函数中的定义。
+
+比如:
+
+```js
+app.get('/user/:id', function(req, res) {
+  res.send('user ' + req.params.id);
+});
+```
+
+同样，你也可以按照下面这样做：
+
+```js
+app.get('/user/:id', function(request, response) {
+  response.send('user ' + request.params.id);
+});
+```
+
+`req`对象是node本身的请求对象的增强版，并且支持[所有的内置字段和方法](https://nodejs.org/api/http.html#http_class_http_incomingmessage).
+
+### 属性
+
+> 在Express4中，`req.files`默认不再存在于`req`对象中，你需要使用类似`busboy`,`multer`,`formidable`,`multiparty`,`connect-multiparty`,`pez`这样的多部件处理中间件来在通过`req.files`获取到上传文件的信息。
+
+#### `req.app`
+
+此属性指向使用当前中间件的Express application。
+
+如果你遵照以下模式，在一个模块中导出一个中间件然后在主文件中`reequire()`这个中间件，则可以在中间件中通过`req.app`获取到使用它的`Express`实例。
+
+比如：
+
+```js
+//index.js
+app.get('/viewdirectory', require('./mymiddleware.js'))
+
+//mymiddleware.js
+module.exports = function (req, res) {
+  res.send('The views directory is ' + req.app.get('views'));
+});
+```
+
+#### `req.baseUrl`
+
+获取一个路由器实例所匹配的路径。
+
+`req.baseUrl`属性和`app`对象的`mountpath`属性类似，不同的地方在于`app. mountpath`返回的是匹配的路径模式。
+
+比如：
+
+```js
+var greet = express.Router();
+
+greet.get('/jp', function (req, res) {
+  console.log(req.baseUrl); // /greet
+  res.send('Konichiwa!');
+});
+
+app.use('/greet', greet); // load the router on '/greet'
+```
+
+即使你使用的是路径通配符或者一组路径模式来匹配路由，`baseUrl`属性返回的也是匹配的字符串而非模式本身，如：
+
+```js
+app.use(['/gre+t', '/hel{2}o'], greet); // load the router on '/gre+t' and '/hel{2}o'
+```
+
+当请求的路径为`/greet/ip`时，`req.baseUrl`的值为`/greet`,当请求的路径为`/hello/jp`时，`req.baseUrl`为`/hello`。
 
 
+#### `req.body`
 
+包含从`request body`中提交而来的键值对形式的数据。默认情况下，`req.body`的值为`undefined`,你需要使用如`body-parser`或`multer`这类body解析中间件来为其填充内容。
+
+下例展示了如何使用body解析中间件来扩充`req.body`中的内容：
+
+```js
+var app = require('express')();
+var bodyParser = require('body-parser');
+var multer = require('multer'); // v1.0.5
+var upload = multer(); // for parsing multipart/form-data
+
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+app.post('/profile', upload.array(), function (req, res, next) {
+  console.log(req.body);
+  res.json(req.body);
+});
+```
+
+#### `req.cookies`
+
+当使用`cookie-parser`中间件时，此属性是一个由请求中的cookie信息构建的对象。如果请求中没有`cookie`，其值为`{}`。
+
+```js
+// Cookie: name=tj
+req.cookies.name
+// => "tj"
+```
+
+如果cookie有签名，则需要使用`req.signedCookies`.
+
+可参照[cookie-parser](https://github.com/expressjs/cookie-parser)查看更多信息。
+
+
+#### `req.fresh`
+
+表征当前请求是否“新鲜”，与`req.stale`相反。
+
+如果`cache-control`请求头不是`no-cache`以及下面的每一项都不是`true`,则它的值为`true`.
+
+- `if-modified-since`请求头是指定的，并且`last-modified`请求头等于或者早于`modified`响应头
+- `if-none-match`请求头为`*`;
+- `if-none-match`请求头在被解析为指令后，不匹配`etag`响应头
+
+```js
+req.fresh
+// => true
+```
+
+更多信息可查看[fresh](https://github.com/jshttp/fresh)
+
+#### `req.hostname`
+
+包含中HOST `HTTP header`派生出来的主机名。
+
+当`trust proxy` 不等于`false`时，此属性将使用`X-Forwarded-Host`header中的值，此值可以通过客户端或者代理设置。
+
+```js
+// Host: "example.com:3000"
+req.hostname
+// => "example.com"
+```
+
+#### `req.ip`
+
+包含请求的远程`ip`。
+
+当`trust proxy`不为`false`时，此值将取自`X-Forwarded-For header.`最左侧，此请求头可以被客户端或者代理设置。
+
+```js
+req.ip
+// => "127.0.0.1"
+```
+
+#### `req.ips`
+
+当`trust proxy` 不等于`false`时，此属性将使用`X-Forwarded-Host` header中指定的一组IP地址。或者将包含一个空数组，此请求头可以被客户端或者代理设置。
+
+比如说，如果`X-Forwarded-For`为`client, proxy1, proxy2`,`req.ips`将会是`["client", "proxy1", "proxy2"]`，而proxy2是最下游的。
+
+#### `req.method`
+
+包含一个对应于当前请求方法的字符串，如`GET,POST,PUT`等等。
+
+#### `req.originalUrl`
+
+> `req.url`并非原生的Express属性，其继承自Node的http模块。
+
+此属性非常类似于`req.url`，不同之处在于，它保留了原始请求URL，允许你为了内部路由自由的重写`req.url`。比如说，`app.use()`的`mounting`功能将重写`req.url`来去除挂载点。
+
+```js
+// GET /search?q=something
+req.originalUrl
+// => "/search?q=something"
+```
+
+在中间件函数中，`req.originalUrl`是`req.baseUrl`和`req.path`的组合，如下所示：
+
+```js
+app.use('/admin', function(req, res, next) {  // GET 'http://www.example.com/admin/new'
+  console.log(req.originalUrl); // '/admin/new'
+  console.log(req.baseUrl); // '/admin'
+  console.log(req.path); // '/new'
+  next();
+});
+```
 
 
 
