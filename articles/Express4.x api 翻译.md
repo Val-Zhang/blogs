@@ -1369,6 +1369,78 @@ app.use('/admin', function(req, res, next) {  // GET 'http://www.example.com/adm
 });
 ```
 
+#### `req.params`
+
+此属性是一个映射到命名路由参数的对象。比如你的路由为`/user/:name`,那么可以通过`req.params.name`获取到`name`属性的值，此对象默认值为`{}`。
+
+```js
+// GET /user/tj
+req.params.name
+// => "tj"
+```
+
+当你的路由定义使用的是正则表达式时，可以使用`req.params[n]`来获取捕获组的值，其中`n`是第`n`个捕获组,此规则也适用于未命名的通配符与字符串路由（如`/file/*`）的匹配：
+
+```js
+// GET /file/javascripts/jquery.js
+req.params[0]
+// => "javascripts/jquery.js"
+```
+
+如果你需要对`req.params`中的键做改变，可以使用`app.param`处理器，更改仅适用于已经在路径路径中定义的参数。
+
+在中间件或路由处理函数中对`req.params`对象所做的任何更改都将被重置。
+
+> **注：** Express会自动依据（`decodeURIComponent`）解码`req.params`中的值。
+
+#### `req.path`
+
+表示请求URL的路径部分。
+
+```js
+// example.com/users?sort=desc
+req.path
+// => "/users"
+```
+
+> 从中间件调用时，挂载点不包含在`req.path`中。有关更多详细信息，请参阅`app.use()`。
+
+#### `req.protocol`
+
+代表请求协议的字符串，可能是`http`或`https`。
+
+当`trust proxy` 不等于`false`时，此属性将使用`X-Forwarded-Host`header中的值，此值可以通过客户端或者代理设置。
+
+```js
+req.protocol
+// => "http"
+```
+
+#### `req.query`
+
+此属性是包含路由中每个查询字符串参数的属性构成的对象。如果没有查询字符串，则为空对象`{}`。
+
+```js
+// GET /search?q=tobi+ferret
+req.query.q
+// => "tobi ferret"
+
+// GET /shoes?order=desc&shoe[color]=blue&shoe[type]=converse
+req.query.order
+// => "desc"
+
+req.query.shoe.color
+// => "blue"
+
+req.query.shoe.type
+// => "converse"
+```
+
+#### `req.route`
+
+
+
+
 
 
 
