@@ -1438,6 +1438,213 @@ req.query.shoe.type
 
 #### `req.route`
 
+返回一个对象，用以表示当前匹配的路由，比如：
+
+```js
+app.get('/user/:id?', function userIdHandler(req, res) {
+  console.log(req.route);
+  res.send('GET');
+});
+```
+
+上述代码片段的输出结果如下：
+
+```js
+{ path: '/user/:id?',
+  stack:
+   [ { handle: [Function: userIdHandler],
+       name: 'userIdHandler',
+       params: undefined,
+       path: undefined,
+       keys: [],
+       regexp: /^\/?$/i,
+       method: 'get' } ],
+  methods: { get: true } }
+```
+
+#### `req.secure`
+
+一个表征`TLS`连接是否建立的布尔值，等同于:
+
+```js
+'https' == req.protocol;
+```
+
+#### `req.signedCookies`
+
+当使用了[cookie-parser](https://www.npmjs.com/package/cookie-parser)中间件时，此属性包含请求带来的签名`cookies`,签名cookies位于不同的对象中用以表示开发者的意图，普通的cookie`req.cookie`容易被伪造儿存在恶意攻击，签名cookie并不会使cookie加密或者隐藏，但是会使得它难以被篡改（用于签名的`secret`是私密的）。
+
+如果没有签名cookie，次属性值为`{}`。
+
+```js
+// Cookie: user=tobi.CP7AWaXDfAKIRfH49dQzKJx7sKzzSoPq7/AcBBRVwlI3
+req.signedCookies.user
+// => "tobi"
+```
+
+更多信息可查看[cookie-parser](https://www.npmjs.com/package/cookie-parser)中间件。
+
+#### `req.stale`
+
+指示请求是否是过时的，此属性是`req.fresh`的反面。更多信息可查看[req.fresh](http://expressjs.com/en/4x/api.html#req.fresh).
+
+```js
+req.stale
+// => true
+```
+
+#### `req.subdomains`
+
+请求的域名的子域名构成的数组。
+
+```js
+// Host: "tobi.ferrets.example.com"
+req.subdomains
+// => ["ferrets", "tobi"]
+```
+
+应用属性`subdomain offset`的默认值为2,用以确定子域名的起始位置。可通过`app.set`改变默认值。
+
+#### `req.xhr`
+
+是一个布尔值，如果请求头的`X-Requested-With`为`XMLHttpRequest`,则为`true`,表明该请求由一个类似`jQuery`的客户端库发起。
+
+```js
+req.xhr
+// => true
+```
+
+### Methods
+
+#### `req.accepts(types)`
+
+检测指定的内容类型是否被接受，结果基于HTTP中的`Accept`请求头。此方法返回最佳匹配值，如果都不匹配则返回`false`,这种情况下，应用的反馈值应该为406 `Not Acceptable`。
+
+`type`的值可以是单个的`MIME`类型字符串（比如说`application/json`），可以是拓展名如`json`,可以是由逗号分隔的列表，或者一个数组。如果是列表或者数组，则返回最佳的匹配值。
+
+```js
+// Accept: text/html
+req.accepts('html');
+// => "html"
+
+// Accept: text/*, application/json
+req.accepts('html');
+// => "html"
+req.accepts('text/html');
+// => "text/html"
+req.accepts(['json', 'text']);
+// => "json"
+req.accepts('application/json');
+// => "application/json"
+
+// Accept: text/*, application/json
+req.accepts('image/png');
+req.accepts('png');
+// => undefined
+
+// Accept: text/*;q=.5, application/json
+req.accepts(['html', 'json']);
+// => "json"
+```
+
+查看[accepts](https://github.com/expressjs/accepts)可了解更多信息。
+
+#### `req.acceptsCharsets(charset[,...])`
+
+返回指定的字符集中第一个匹配的字符集，此结果基于`Accept-Charset`请求头，如果指定的字符集都不被认可则返回`false`.
+
+查看[accepts](https://github.com/expressjs/accepts)可了解更多信息。
+
+#### `req.acceptsEncodings(encoding [, ...])`
+
+返回指定的编码集中的第一个匹配的编码，结果基于`Accept-Encoding`请求头，如果都不匹配则返回`false`.
+
+查看[accepts](https://github.com/expressjs/accepts)可了解更多信息。
+
+#### `req.acceptsLanguages(lang [, ...])`
+
+返回匹配到的第一种语言，结果技术`Accept-Language`请求头。如果都不匹配则返回`false`.
+
+查看[accepts](https://github.com/expressjs/accepts)可了解更多信息。
+
+#### `req.get(field)`
+
+获取请求头中对应项的值（大小写不敏感），`Referrer`和`Referer`是通用的。
+
+```js
+req.get('Content-Type');
+// => "text/plain"
+
+req.get('content-type');
+// => "text/plain"
+
+req.get('Something');
+// => undefined
+```
+
+结果和`req.header(filed)`一致。
+
+#### `req.is(type)`
+
+如果传入请求的“Content-Type”HTTP头字段与type参数指定的MIME类型匹配，则返回匹配的内容类型。否则返回false。
+
+```js
+// With Content-Type: text/html; charset=utf-8
+req.is('html');       // => 'html'
+req.is('text/html');  // => 'text/html'
+req.is('text/*');     // => 'text/*'
+
+// When Content-Type is application/json
+req.is('json');              // => 'json'
+req.is('application/json');  // => 'application/json'
+req.is('application/*');     // => 'application/*'
+
+req.is('html');
+// => false
+```
+
+可参看[type-is](https://github.com/expressjs/type-is)了解更多信息。
+
+#### `req.param(name [, defaultValue])`
+
+> 已弃用，请使用`req.params,req.body.req.query`。
+
+
+#### `req.range(size[, options])`
+
+> 此`api`还不算理解
+
+规范 头解析器。
+
+`size`参数表示资源的最大值。
+
+`options`是一个可包含如下值得对象：
+
+| 属性 | 类型 | 描述 |
+|----|---|---|
+|`combine` | 布尔值 | 指示重叠或者相邻的域是否该合并，默认为`false`,当设置为`true`时，域将被合并返回就类似本身他们在header中是这样表示的一样|
+
+此方法会返回一个数组代表成功或者一个负数表示错误的解析
+
+- -2 表示格式错误的头部字符串 
+- -1 表示不满足范围
+
+```js
+// parse header from request
+var range = req.range(1000)
+
+// the type of the range
+if (range.type === 'bytes') {
+  // the ranges
+  range.forEach(function (r) {
+    // do something with r.start and r.end
+  })
+}
+```
+
+
+
+
 
 
 
