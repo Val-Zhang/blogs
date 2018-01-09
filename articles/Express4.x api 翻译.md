@@ -1696,6 +1696,147 @@ app.use(function(req, res, next){
 });
 ```
 
+### 方法
+
+#### `res.append(field[,value])`
+
+> 在Express4.11.0以上版本中被支持。
+
+添加指定值到HTTP响应头中，如果`header`不存在，则依据指定的值创建该头，值可以是字符串或者数组。
+
+注意：在`res.append()`后面调用`res.set()`将覆盖前面设置的值。
+
+```js
+res.append('Link', ['<http://localhost/>', '<http://localhost:3000/>']);
+res.append('Set-Cookie', 'foo=bar; Path=/; HttpOnly');
+res.append('Warning', '199 Miscellaneous warning');
+```
+
+#### `res.attachment([filename])`
+
+设置HTTP响应头`Content-Disposition`为`attachment`,如果指定了`filename`,则会依据`filename`的后缀通过`res.type()`设置`Content-Type`,同时会设置`Content-Disposition “filename=”`部分：
+
+```js
+res.attachment();
+// Content-Disposition: attachment
+
+res.attachment('path/to/logo.png');
+// Content-Disposition: attachment; filename="logo.png"
+// Content-Type: image/png
+```
+
+#### `res.cookie(name, value [, options])`
+
+设置cookie `name`的值为`value`。 value的值可以是一个字符串或者转换为`json`的对象。
+
+`options` 参数是一个可以拥有以下属性的参数。
+
+| Property | Type | Description |
+| ------- | --- | ------------- |
+| domain | String | 设置 cookie 的域名,默认为 app 的域名 |
+| encode | Function | 用于编码 cookie 的函数，默认为`encodeURIComponent` |
+| expires | Date	| GMT 格式的时间，用以表示cookie的过期时间. 如果没有指定，则生成一个session cookie |
+| httpOnly | Boolean |	标记该cookie只能在服务器端可用 |
+| maxAge | Number | 已ms格式设置的cookie过期时间 |
+| path | String | cookie的路径，默认为`/` |
+| secure | Boolean | 指示该cookie只有在https情况下可用 |
+| signed | Boolean | 指示该cookie是否应该被签名 |
+| sameSite |	Boolean or String |	“SameSite” Set-Cookie 熟悉. 更多信息可参考[这里](https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00#section-4.1.1.)
+
+> `res.cookie()`做的事情其实就是设置了`Set-Cookie`头中对应的信息。
+
+使用示例如下：
+
+```js
+res.cookie('name', 'tobi', { domain: '.example.com', path: '/admin', secure: true });
+res.cookie('rememberme', '1', { expires: new Date(Date.now() + 900000), httpOnly: true });
+```
+
+`encode`值是一个函数，用于指定`cookie`的编码格式，不支持异步函数。
+
+示例如下：
+
+```js
+//Default encoding
+res.cookie('some_cross_domain_cookie', 'http://mysubdomain.example.com',{domain:'example.com'});
+// Result: 'some_cross_domain_cookie=http%3A%2F%2Fmysubdomain.example.com; Domain=example.com; Path=/'
+
+//Custom encoding
+res.cookie('some_cross_domain_cookie', 'http://mysubdomain.example.com',{domain:'example.com', encode: String});
+// Result: 'some_cross_domain_cookie=http://mysubdomain.example.com; Domain=example.com; Path=/;'
+```
+
+`maxAge`是一种更为方便的设置过期时间的方法，如下:
+
+```js
+res.cookie('rememberme', '1', { maxAge: 900000, httpOnly: true });
+```
+
+cookie的值也可以是一个对象，其之后会被`bodyParser()`序列化为JSON。
+
+```js
+res.cookie('cart', { items: [1,2,3] });
+res.cookie('cart', { items: [1,2,3] }, { maxAge: 900000 });
+```
+
+当使用`cookie-parser`中间件时，此方法同样支持签名cookie，只需要设置`signed`为`true`,`res.cookie()`就会利用传输给`cookieParser(secret)`的secret对该值进行签名。
+
+```js
+res.cookie('name', 'tobi', { signed: true });
+```
+
+之后你可以通过`req.signedCookie`读取签名的cookie值。
+
+#### `res.clearCookie(name[,options])`
+
+清除名称为`name`的cookie。
+
+> 浏览器等客户端只会清除到达过期时间的cookie。
+
+```js
+res.cookie('name', 'tobi', { path: '/admin' });
+res.clearCookie('name', { path: '/admin' });
+```
+
+#### `res.download(path [, filename] [, options] [, fn])`
+
+> 此方法中的参数`options`只在`v4.16.0`之后的版本中可用。
+
+已附件在路径中传输文件，一般说来，浏览器会提示用户下载文件，默认情况下 `Content-Disposition` header 中的 `filename=` 参数就是路径（此值一般会出现在浏览器的对话框中）。使用`filename`参数可用覆盖此值。传输出错或者下载完成会调用回调函数`fn`。此方法使用`res.sendFile()`来传送文件。
+
+可选的options参数传递给底层的[`res.sendFile()`](http://expressjs.com/en/4x/api.html#res.sendFile)调用，并采用与其完全相同的参数。
+
+```js
+res.download('/report-12345.pdf');
+
+res.download('/report-12345.pdf', 'report.pdf');
+
+res.download('/report-12345.pdf', 'report.pdf', function(err){
+  if (err) {
+    // Handle error, but keep in mind the response may be partially-sent
+    // so check res.headersSent
+  } else {
+    // decrement a download credit, etc.
+  }
+});
+
+```
+
+#### `res.end([data] [, encoding])`
+
+用于结束响应过程，此方法来自node核心，`http.ServerResponse` 模块中的 `response.end()`.用于不传输任何数据快速结束响应，如果你想要传输数据，请使用`res.send()`或者`res.json()`
+
+```js
+res.end();
+res.status(404).end();
+```
+
+#### `res.format(object)`
+
+
+
+
+
 
 
 
