@@ -1642,6 +1642,60 @@ if (range.type === 'bytes') {
 }
 ```
 
+## `Response`
+
+`res`对象代表的是当Express app 接收 HTTP 请求时 发送的 HTTP 响应。一般说来此对象会被命名为`res`(相应请求对象是`req`)，不过其命名实际上是由回调函数中的参数确定的。
+
+比如说你可以这样做：
+
+```js
+app.get('/user/:id', function(req, res){
+  res.send('user ' + req.params.id);
+});
+```
+
+也可以这样做：
+
+```js
+app.get('/user/:id', function(request, response){
+  response.send('user ' + request.params.id);
+});
+```
+
+`res`对象是Node内置的`response`对象的加强版并且支持其所有的[内置方法](https://nodejs.org/api/http.html#http_class_http_serverresponse)。
+
+### 属性
+
+#### `res.app`
+
+指向使用该中间件的`express`实例，在请求对象中 `req.app` 和 `res.app`一样。
+
+#### `res.headersSent`
+
+是一个布尔值，指示`app`是否为响应发送了`HTTP headers`。
+
+```js
+app.get('/', function (req, res) {
+  console.log(res.headersSent); // false
+  res.send('OK');
+  console.log(res.headersSent); // true
+});
+```
+
+#### `res.locals`
+
+包含请求范围内的响应本地变量。除了在请求/响应过程中视图渲染时可用，其余和 app.locals 功能一样。
+
+这个属性在暴露请求层面的信息时非常有用，比如 路径名, 授权用户, 用户设置等等。
+
+```js
+app.use(function(req, res, next){
+  res.locals.user = req.user;
+  res.locals.authenticated = ! req.user.anonymous;
+  next();
+});
+```
+
 
 
 
