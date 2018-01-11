@@ -1833,13 +1833,670 @@ res.status(404).end();
 
 #### `res.format(object)`
 
+如果请求对象中存在的`Accept` HTTP头，可触发内容协商，将使用`req.accepts()`值的权重为选择请求对应的处理器，如果请求的`Accept`请求头没有被指定，将触发第一个回调函数，当没有匹配值时，服务器会返回406 “Not Acceptable”，或者触发默认的回调函数。
+
+当回调函数被选定时，响应头的`Content-Type`将会被自动设定，当然在回调函数中你也可以使用`res.set()` 或者 `res.type()`来更改此请求头的值。
+
+下例中，当`Accept`头设置为“application/json” 或 “*/json” 时响应为`{ "message": "hey" }`,(如果`Accept`头设置为`*/*`,响应为`hey`)。
+
+```js
+res.format({
+  'text/plain': function(){
+    res.send('hey');
+  },
+
+  'text/html': function(){
+    res.send('<p>hey</p>');
+  },
+
+  'application/json': function(){
+    res.send({ message: 'hey' });
+  },
+
+  'default': function() {
+    // log the request and respond with 406
+    res.status(406).send('Not Acceptable');
+  }
+});
+```
+
+除了指定规范化的 `MIME` 类型，还可以使用拓展名来映射，来简化上述语句:
+
+```js
+res.format({
+  text: function(){
+    res.send('hey');
+  },
+
+  html: function(){
+    res.send('<p>hey</p>');
+  },
+
+  json: function(){
+    res.send({ message: 'hey' });
+  }
+});
+```
+
+#### `res.get(field)`
+
+依据指定的`field`,返回指定的`HTTP` 响应头对应的值，`field`大小写不敏感。
+
+```js
+res.get('Content-Type');
+// => "text/plain"
+```
+
+#### `res.json([body])`
+
+发送一个JSON响应，此方法将使用正常的内容类型发送响应，参数将通过`JSON.stringify()`转换为`JSON`字符串。
+
+参数可以是任何JSON类型，包括对象，数组，字符串，布尔值，数值等等，你也可以使用它转换其它值为JSON，比如说`null`,`undefined`(虽然这些类型从技术上来讲不是有效的JSON)。
+
+```js
+res.json(null);
+res.json({ user: 'tobi' });
+res.status(500).json({ error: 'message' });
+```
+
+#### `res.jsonp([body])`
+
+使用JSONP发送JSON响应，除了支持`JSONP`回调，此方法与`res.json()`相同。
+
+```js
+res.jsonp(null);
+// => callback(null)
+
+res.jsonp({ user: 'tobi' });
+// => callback({ "user": "tobi" })
+
+res.status(500).jsonp({ error: 'message' });
+// => callback({ "error": "message" })
+```
+
+默认情况下，JSONP的回调函数名称为`callback`,可以通过设置[jsonp callback name](http://expressjs.com/en/4x/api.html#app.settings.table)来更换。
+
+以下是JSONP的一些使用示例：
+
+```js
+// ?callback=foo
+res.jsonp({ user: 'tobi' });
+// => foo({ "user": "tobi" })
+
+app.set('jsonp callback name', 'cb');
+
+// ?cb=foo
+res.status(500).jsonp({ error: 'message' });
+// => foo({ "error": "message" })
+```
+
+#### `res.links(links)`
+
+把参数添加到HTTP 响应头 `Link` 中。
+
+如下例:
+
+```js
+res.links({
+  next: 'http://api.example.com/users?page=2',
+  last: 'http://api.example.com/users?page=5'
+});
+```
+
+将得到以下结果;
+
+```js
+Link: <http://api.example.com/users?page=2>; rel="next",
+      <http://api.example.com/users?page=5>; rel="last"
+```
+
+#### `res.location(path)`
+
+设置响应头`Location`为指定的值：
+
+```js
+res.location('/foo/bar');
+res.location('http://example.com');
+res.location('back');
+```
+
+值`back`具有特殊的含义，它指向请求头中的`Referer`头的值，如果请求头中`Referer`没有被指定，响应头中的`Location`将指向`/`。
+
+> 如果没有编码，在进行编码后，Express将通过头`Location`传递指定的URL到浏览器中，这个过程不会有任何验证。
+> 浏览器负责从当前URL或引用UR以及`location`中指定的URL获取预期的URL，并相应的进行重定向。
+
+#### `res.redirect([status,] path)`
+
+依据指定的路径和状态（一个对应于HTTP状态码的正整数）重定向URL，如果没有指定，默认值为`302 Found`。
+
+```js
+res.redirect('/foo/bar');
+res.redirect('http://example.com');
+res.redirect(301, 'http://example.com');
+res.redirect('../login');
+```
+
+可以传入一个完整的站点信息重定向到其它的网站
+
+```js
+res.redirect('http://google.com');
+```
+
+重定向也可以相对域名所有的`root`发生，比如说，如果当前位置位于`http://example.com/admin/post/new`,下述代码将重定向至`http://example.com/admin`。
+
+```js
+res.redirect('/admin');
+```
+
+重定向也可以相对于当前的URL，比如下面的例子中将从`http://example.com/blog/admin/`重定向至`http://example.com/blog/admin/post/new`。
+
+```js
+res.redirect('post/new');
+```
+
+如果从`http://example.com/blog/admin`重定向至`post/new`将重定向至`http://example.com/blog/post/new.`
+
+> 可以把`/`这个过程理解,这样能让你的思路更为清晰。
+
+如果传入的值为`back`,将重定向至`referer`请求头,如果`referer`不存在则默认为`/`。
+
+```js
+res.redirect('back');
+```
+
+#### `res.render(view [, locals] [, callback])`
+
+渲染视图并发送渲染得到的`html`字符串到客户端。可选参数如下：
+- `locals`:一个定义了视图函数中可用的本地变量组成的对象；
+- `callback`:一个回调函数。如果提供，该方法返回可能的错误和呈现的字符串，但不会执行自动响应。发生错误时，该方法会在内部调用`next(err)`。
+
+`view`参数是一个字符串，指向视图文件的位置。此值可以是决定路径也可以是相对`views setting`的相对路径，如果该路径不包含拓展名则`view engine`的设置会决定其拓展名，如果包含拓展名将以指定的模板引擎渲染模块（使用`require`），并将触发对应模块的`__express`方法来进行渲染。更多信息可见[在Express中使用模板引擎](http://expressjs.com/guide/using-template-engines.html)。
+
+> view参数执行文件系统操作，如从磁盘读取文件和评估Node.js模块，因此出于安全考虑，不应包含来自最终用户的输入。
+
+```js
+// send the rendered view to the client
+res.render('index');
+
+// if a callback is specified, the rendered HTML string has to be sent explicitly
+res.render('index', function(err, html) {
+  res.send(html);
+});
+
+// pass a local variable to the view
+res.render('user', { name: 'Tobi' }, function(err, html) {
+  // ...
+});
+```
+
+#### `res.send([body])`
+
+发送`Http`响应，
+
+`body`参数可以是`Buffer object, a String, an object, or an Array.`
+
+如：
+
+```js
+res.send(new Buffer('whoop'));
+res.send({ some: 'json' });
+res.send('<p>some html</p>');
+res.status(404).send('Sorry, we cannot find that!');
+res.status(500).send({ error: 'something blew up' });
+```
+
+此方法为非流式响应提供了一些自动操作，如自动添加`Content-Length`响应头，并且自动添加`HEAD`以及`HTTP`缓存。
+
+当参数为`Buffer`对象时，此方法设置`Content-Type`响应头为`application/octet-stream`,除非像下面这样预先定义：
+
+```js
+res.set('Content-Type', 'text/html');
+res.send(new Buffer('<p>some html</p>'));
+```
+
+当参数为`String`时，会自动设置`Content-Type`为“text/html”
+
+```js
+res.send('<p>some html</p>');
+```
+
+当响应为对象或者数组时，响应值为`JSON`表示：
+
+```js
+res.send({ user: 'tobi' });
+res.send([1,2,3]);
+```
+
+#### `res.sendFile(path [, options] [, fn])`
+
+> `res.sendFile(path [, options] [, fn])`在`Express4.8.0`之后的版本中被支持。
+
+基于给定的路径传输文件，并依据文件的拓展名设置响应头的`Content-Type`.除非在`options`对象中设置了`root`,否者路径必须为绝对路径。
+
+下表提供了`options`参数的详细信息
+
+| Property |	Description |	Default |	Availability |
+| -------- | ------------ | ------ | ------------| 
+| maxAge | 以毫秒格式设置`Cache-Control`响应头中的`max-age`值，可以是数值或者数值格式的字符串 |	0 |  |
+| root | 相对文件的Root路径 | | |
+| lastModified |	设置`Last-Modified`响应头的值为该文件在系统中最后被修改的日期，设置为false 可以禁用它 | Enabled |	4.9.0+ |
+| headers | 包含HTTP头文件的对象。| | |
+| dotfiles | 是否提供点开头的文件. 可选值有 “allow”, “deny”, “ignore”. | “ignore” ||
+| acceptRanges |	启用或禁用接受范围的请求。|	true | 4.14+ |
+| cacheControl |	启用或者禁用设置 `Cache-Control` 响应头 | true | 4.14+ |
+| immutable | 启用或者禁用响应头中的`Cache-Control` 的`immutable`指示，如果启用，`maxAge`应该指示为可用。此指示会在`maxAge`生命周期内组织客户端进行额外的请求|false |4.16+|
+
+当传输完成或者出现错误时会触发回调函数`fn(err)`,如果指定了回调函数并且确实发生了错误，则回调函数必须处理响应过程，可中断响应也可传入控制到下一个`route`。
+
+示例如下：
+
+```js
+app.get('/file/:name', function (req, res, next) {
+
+  var options = {
+    root: __dirname + '/public/',
+    dotfiles: 'deny',
+    headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true
+    }
+  };
+
+  var fileName = req.params.name;
+  res.sendFile(fileName, options, function (err) {
+    if (err) {
+      next(err);
+    } else {
+      console.log('Sent:', fileName);
+    }
+  });
+
+});
+```
+
+下面的例子展示了使用`res.sendFile`为服务文件提供精细的控制:
+
+```js
+app.get('/user/:uid/photos/:file', function(req, res){
+  var uid = req.params.uid
+    , file = req.params.file;
+
+  req.user.mayViewFilesFrom(uid, function(yes){
+    if (yes) {
+      res.sendFile('/uploads/' + uid + '/' + file);
+    } else {
+      res.status(403).send("Sorry! You can't see that.");
+    }
+  });
+});
+```
+
+更多信息可以查看[send](https://github.com/pillarjs/send)。
+
+#### `res.sendStatus(statusCode)`
+
+设置HTTP响应的状态码为`statusCode`,并且在响应`body`中添加它的字符串表示。
+
+```js
+res.sendStatus(200); // equivalent to res.status(200).send('OK')
+res.sendStatus(403); // equivalent to res.status(403).send('Forbidden')
+res.sendStatus(404); // equivalent to res.status(404).send('Not Found')
+res.sendStatus(500); // equivalent to res.status(500).send('Internal Server Error')
+```
+
+如果指定了不受支持的状态码，该状态码依旧会被指定，响应信息会是该状态码的字符串表示。
+
+```js
+res.sendStatus(2000); // equivalent to res.status(2000).send('2000')
+```
+
+[关于状态码的更多信息](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+
+#### `res.set(field [, value])`
+
+设置响应头对应的`field`为`value`,此方法也支持同时设置多个`field`为对应的值。
+
+```js
+res.set('Content-Type', 'text/plain');
+
+res.set({
+  'Content-Type': 'text/plain',
+  'Content-Length': '123',
+  'ETag': '12345'
+});
+```
+
+此方法和`res.header(field [, value]).`功能一致。
+
+#### `res.status(code)`
+
+设置响应的HTTP状态码，它可以看做一个可链式调用的[response.statusCode](http://nodejs.org/api/http.html#http_response_statuscode)。
+
+```js
+res.status(403).end();
+res.status(400).send('Bad Request');
+res.status(404).sendFile('/absolute/path/to/404.png');
+```
+
+#### `res.type(type)`
+
+设置`Content-Type`为对应的`MIME`类型，如果`type`中包含`/`,将会设置`Content-Type`为传入的`type`。
+
+```js
+res.type('.html');              // => 'text/html'
+res.type('html');               // => 'text/html'
+res.type('json');               // => 'application/json'
+res.type('application/json');   // => 'application/json'
+res.type('png');                // => image/png:
+```
+
+#### `res.vary(field)`
+
+如果不存在添加该字段到`Vary`响应头中。
+
+```js
+res.vary('User-Agent').render('docs');
+```
 
 
+## Router
+
+`router`对象是一个中间件或者路由的独立实例，你可以把它当做迷你程序，只能执行中间件和路由函数。每一个Express程序都有一个内置的`app`路由。
+
+路由器的行为就像中间件本身一样，所以你可以用它作为`app.use()`的参数，或者作为另一个路由器的`use（）`方法的参数。
+
+顶层的`express`对象拥有一个`Router()`方法可以用于创建一个`router`对象。
+
+一旦创建了一个路由器对象，就可以像应用程序一样向其添加中间件和HTTP方法路由（例如`get`，`put`，`post`等）比如：
+
+```js
+// invoked for any requests passed to this router
+router.use(function(req, res, next) {
+  // .. some logic here .. like any other middleware
+  next();
+});
+
+// will handle any request that ends in /events
+// depends on where the router is "use()'d"
+router.get('/events', function(req, res, next) {
+  // ..
+});
+```
+
+你可以为特定的路径指定路由，从而把对不同路由的处理分隔到不同的文件中。
+
+```js
+// only requests to /calendar/* will be sent to our "router"
+app.use('/calendar', router);
+```
+
+### 方法
+
+#### `router.all(path, [callback, ...] callback)`
 
 
+此方法类似标准的`router.MEYHOD()`方法，不同的地方在于它将匹配所有的`http`请求。
+
+`app.all()`方法在处理对某特定的前缀或匹配的特殊路径的所有类型的请求时特别有用。比如说如果你把下述代码放在所有其它路径的定义之前，就会让从此代码之后的所有路由都需要身份验证，并自动加载一个user。这些回调也不必做为终点，`loadUser`可以用来执行某个任务，然后调用`next()`来继续匹配之后的路由。
+
+```js
+router.all('*', requireAuthentication, loadUser);
+```
+
+上述代码也等同于
+
+```js
+router.all('*', requireAuthentication);
+router.all('*', loadUser);
+```
+
+下面还有另外一个非常好用的全局函数示例，这个例子和上面那个类似，但是严格限制路径以`/api`开头
+
+```js
+router.all('/api/*', requireAuthentication);
+```
+
+#### `router.METHOD(path, [callback, ...] callback)`
+
+依据请求的类型处理http请求，请求类型可以是`GET,PUT,POST`等等的小写模式。因此，实际的方法是`app.get()`,`app.post()`,`app.put()`等等。[点击这里](http://expressjs.com/zh-cn/4x/api.html#routing-methods)可以查看详细的路由方法清单。
+
+> 如果没有在`router.get()`前指定`HTTP HEAD`对应的方法，将会调用`router.get()`响应`HEAD`请求。
+
+你也可以提供多个回调函数，他们会被同等的对待，并且像中间件一样行为，只不过这些回调可能会调用next（'route'）来绕过剩余的路由回调。您可以使用此机制在路由上执行预处理，并且在不再需要在继续处理时把控制权移交给下一个路由。
+
+下面的例子展示了最简单的路由定义，Express会将路径字符串转换为正则表达式，用以匹配接收到的请求，匹配时不会考虑查询字符串，比如`GET /`将会匹配`GET /?name=tobi`,如下所示：
+
+```js
+router.get('/', function(req, res){
+  res.send('hello world');
+});
+```
+
+你同样可以使用正则表达式来进行匹配，这在你有特殊匹配时非常有用，比如说下面的路由将匹配`GET /commits/71dbb9c`和 `GET /commits/71dbb9c..4c084f9`
+
+```js
+router.get(/^\/commits\/(\w+)(?:\.\.(\w+))?$/, function(req, res){
+  var from = req.params[0];
+  var to = req.params[1] || 'HEAD';
+  res.send('commit range ' + from + '..' + to);
+});
+```
+
+#### `router.param(name, callback)`
+
+为路由参数添加回调函数，其中`name`是参数名或参数组成的数组，`callback`是回调函数。回调函数的参数依次是请求对象(request)，响应对象(response),下一个中间件，参数值及参数名。
+
+如果`name`是一个数组，回调函数会按照它们声明的顺序被注册到其中的每个值。此外除了最后一个声明的参数，回调函数中的`next`将会触发下一个注册参数的回调函数，而对于最后一个参数，`next`则会调用处理当前路由的下一个中间件，此时的处理就像`name`只是一个字符串一样。
+
+比如说当`:user`存在于路由的路径中时，你可能想映射用户加载逻辑以自动提供`req.user`给路由或者对参数输入执行验证。
+
+```js
+app.param('user', function(req, res, next, id) {
+
+  // try to get the user details from the User model and attach it to the request object
+  User.find(id, function(err, user) {
+    if (err) {
+      next(err);
+    } else if (user) {
+      req.user = user;
+      next();
+    } else {
+      next(new Error('failed to load user'));
+    }
+  });
+});
+```
+
+Param 回调函数对于它们定义的路由来说是本地的。它们不会被载入的app及router继承。因此，定义在`app`上的参数回调只会被定义在`app`路由上的路由参数触发。
+
+所有的参数回调将会在任何匹配该路由的处理函数前触发，并且在一个请求响应周期内只会被触发一次，即使参数匹配了多个路由也是如此。
+
+```js
+app.param('id', function (req, res, next, id) {
+  console.log('CALLED ONLY ONCE');
+  next();
+});
+
+app.get('/user/:id', function (req, res, next) {
+  console.log('although this matches');
+  next();
+});
+
+app.get('/user/:id', function (req, res) {
+  console.log('and this matches too');
+  res.end();
+});
+```
+
+对于请求`GET /user/42`将打印以下语句：
+
+```bash
+CALLED ONLY ONCE
+although this matches
+and this matches too
+```
+
+```js
+app.param(['id', 'page'], function (req, res, next, value) {
+  console.log('CALLED ONLY ONCE with', value);
+  next();
+});
+
+app.get('/user/:id/:page', function (req, res, next) {
+  console.log('although this matches');
+  next();
+});
+
+app.get('/user/:id/:page', function (req, res) {
+  console.log('and this matches too');
+  res.end();
+});
+```
+
+对于请求 `GET /user/42/3`,下面语句将被打印
+
+```bash
+CALLED ONLY ONCE with 42
+CALLED ONLY ONCE with 3
+although this matches
+and this matches too
+```
+
+#### `router.route(path)`
+
+返回单一路由的实例，你可以使用不同的可选中间件来处理不同类型的请求。使用`route.route()`可以避免重复的写路由名及由此造成的输入错误。
+
+```js
+var router = express.Router();
+
+router.param('user_id', function(req, res, next, id) {
+  // sample user, would actually fetch from DB, etc...
+  req.user = {
+    id: id,
+    name: 'TJ'
+  };
+  next();
+});
+
+router.route('/users/:user_id')
+.all(function(req, res, next) {
+  // runs for all HTTP verbs first
+  // think of it as route specific middleware!
+  next();
+})
+.get(function(req, res, next) {
+  res.json(req.user);
+})
+.put(function(req, res, next) {
+  // just an example of maybe updating the user
+  req.user.name = req.params.name;
+  // save user ... etc
+  res.json(req.user);
+})
+.post(function(req, res, next) {
+  next(new Error('not implemented'));
+})
+.delete(function(req, res, next) {
+  next(new Error('not implemented'));
+});
+```
 
 
+这种方法为单一的路径`/users/:user_id`添加了不同的 HTTP 方法。
 
+#### `router.use([path], [function, ...] function)`
+
+为可选的`path`添加一系列的处理函数，`path`默认值为`/`。
+
+此方法类似于`app.use()`,下面是一个简单的例子，可以查看[`app.use`](http://expressjs.com/en/4x/api.html#app.use)查看更多信息。
+
+中间件就像水暖管一样，有请求时会从第一个匹配的中间件开始逐步往下到所有匹配到的中间件。
+
+```js
+var express = require('express');
+var app = express();
+var router = express.Router();
+
+// simple logger for this router's requests
+// all requests to this router will first hit this middleware
+router.use(function(req, res, next) {
+  console.log('%s %s %s', req.method, req.url, req.path);
+  next();
+});
+
+// this will only be invoked if the path starts with /bar from the mount point
+router.use('/bar', function(req, res, next) {
+  // ... maybe some additional /bar logging ...
+  next();
+});
+
+// always invoked
+router.use(function(req, res, next) {
+  res.send('Hello World');
+});
+
+app.use('/foo', router);
+
+app.listen(3000);
+```
+
+匹配的路径被剥离并且对中间件函数不可见，此特性的意义在于一个匹配的中间件函数可以独立于路径执行。
+
+使用`router.use()`定义的中间件函数非常重要，它们会依次被触发，比如说第一个中间件函数常常是`logger`,这样所有的请求都会被`log`.
+
+```js
+var logger = require('morgan');
+
+router.use(logger());
+router.use(express.static(__dirname + '/public'));
+router.use(function(req, res){
+  res.send('Hello');
+});
+```
+
+假如现在你想忽略静态文件的`log`,但是对其它的请求还是想要有`log`,你只需把` express.static() `移动到`logger`中间件上面即可。
+
+```js
+router.use(express.static(__dirname + '/public'));
+router.use(logger());
+router.use(function(req, res){
+  res.send('Hello');
+});
+```
+
+静态服务器是另一个很好的例子，假如你想给`/public`更高的权重，你可以按照下面这样进行：
+
+```js
+app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/files'));
+app.use(express.static(__dirname + '/uploads'));
+```
+
+`router.use()`方法还支持命名参数，以便其他路由器的挂载点可以使用命名参数进行预加载。
+
+注意：虽然这些中间件功能是通过一个特定的路由器添加的，但是当它们运行的​​时候是由它们所匹配的路径（而不是路由器）来定义的。因此，如果路由匹配，通过一个路由器添加的中间件可以运行其他路由器。例如，这段代码显示了两个不同的路由器匹配到了同一个路径
+
+```js
+var authRouter = express.Router();
+var openRouter = express.Router();
+
+authRouter.use(require('./authenticate').basic(usersdb));
+
+authRouter.get('/:user_id/edit', function(req, res, next) { 
+  // ... Edit user UI ...  
+});
+openRouter.get('/', function(req, res, next) { 
+  // ... List users ... 
+})
+openRouter.get('/:user_id', function(req, res, next) { 
+  // ... View user ... 
+})
+
+app.use('/users', authRouter);
+app.use('/users', openRouter);
+```
+
+上面的例子中，虽然`authenticate`定义在了`authRouter`上，但是也会执行`openRouter`路由器关联的中间件，为了避免这种行为，最好不同的路由器不要匹配相同的路径。
 
 
 
