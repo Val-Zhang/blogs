@@ -1,11 +1,14 @@
-# Express4.x api 翻译
+# Express4.x api 翻译（draft）
 
-> 用了一年多的`Express`了，其实会用的功能也能基本满足业务的需求，但是总是感觉自己对其更深的掌握还是缺少一层系统性。因此翻译其api，以求更深的认识。
-> 
+> 用了一年多的`Express`了，其实会用的功能也能基本满足业务的需求，但是总是感觉自己对其的掌握还是缺少一种系统性。故翻译其api，以期自己在翻译过程中对其有更深的认识。
+
+[API 原文地址](http://expressjs.com/en/4x/api.html)
+
+> 翻译的内容还比较粗糙，欢迎[在此处](https://github.com/zhangwang1990/blogs/issues/8)提建议进行修改。
 
 ## `express()`
 
-用以生成一个`Express`应用，`express()`函数是由`express`模块导出的顶级函数。
+用以生成一个`Express`应用，`express()`函数是从`express`模块导出的顶级函数。
 
 ```js
 var express = require('express');
@@ -14,15 +17,15 @@ var app = express();
 
 ### 方法
 
-#### `express.json()`
+#### `express.json([options])`
 
 > 此方法支持Express4.16.0及更新的版本，用于取代`body-parser`
 
-这是Express提供的一个内置中间件，它基于[body-parser](http://expressjs.com/en/resources/middleware/body-parser.html)解析传入的请求为JSON格式。
+这是Express提供的一个内置中间件函数，它基于[body-parser](http://expressjs.com/en/resources/middleware/body-parser.html)用以解析传入的请求为JSON格式。
 
-返回只解析JSON的中间件,而且只查看`Content-Type header`与类型选项匹配的请求。这个解析器接收任何编码格式的`body`,支持自动的解压`gzip`和压缩编码。
+本函数返回只解析JSON的中间件,并且只作用于`Content-Type`请求头与`type`选项匹配的请求。此解析器可接收任何编码格式的`body`,支持自动解压`gzip`和压缩`deflate`编码。
 
-进过此中间件处理后，会返回一个新的包含解析数据的`body`对象（如`req.body`）,如果没有`body`可供解析或`Content-Type`不匹配或发生了错误则会返回一个空对象`({})`。
+在进过此中间件处理后，`request`对象中会添加`body`属性（如`req.body`），它是一个对象，其中包含解析而来的数据,如果请求中没有`body`可供解析或`Content-Type`不匹配抑或发生了错误，`body`则会是一个空对象`({})`。
 
 下表描述了可选的`options`对象的属性：
 
@@ -32,7 +35,7 @@ var app = express();
 |`limit`| 控制请求体的大小，如果是一个数值，为指定的字节数，如果是一个字符串，该值会被传给[bytes](https://www.npmjs.com/package/bytes)库进行解析 | Mixed |"100kb"|
 |`reviver`| `reviver`选项会直接传递给`JSON.parse`做为第二个参数，可以在[mdn](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#Example.3A_Using_the_reviver_parameter)上查看更多信息 |Function|null|
 |`strict`|是否只接收数组或对象，当设置为false时能接收任何`JSON.parse`可处理的类型|Boolean|`true`|
-|`type`|用于确定中间件将处理那种媒体类型，其值可以是一个字符串，字符串构成的数组或者一个函数，如果不是一个函数，该值会被直接传输给[`type-is`](https://www.npmjs.org/package/type-is#readme)库，值可以是一个拓展名（如`json`）,`mime type`(如`application/json`)或者包含通配符的 ` mime type` （如`*/*` 或者 `*/json`），如果是一个函数，`type`类型将通过`fn(req)`调用并且如果返回一个真值请求会被解析|Mixed| "application/json"|
+|`type`|用于确定中间件将处理那种媒体类型，其值可以是一个字符串，字符串构成的数组或者一个函数，当不是一个函数时，该值会被传输给[`type-is`](https://www.npmjs.org/package/type-is#readme)库进行处理，该值还可以是一个拓展名（如`json`）,`mime type`(如`application/json`)或者包含通配符的 ` mime type` （如`*/*` 或者 `*/json`），如果是一个函数，`type`类型将通过`fn(req)`调用，如果返回的是一个有效值，请求会被解析|Mixed| "application/json"|
 |`verify `|如果这个选项被支持，将以`verify(req, res, buf, encoding)`形式被调用，其中`buf`是由原始请求体构成的`Buffer`,`encoding`是请求的编码，解析可以通过抛出错误而放弃|Function|`undefined`|
 
 
@@ -44,11 +47,13 @@ var app = express();
 
 `root`参数指定提供静态文件的根目录。服务器将拼合`req.url`和所提供的根目录来查找静态文件。如果没有找到对应的文件，服务器不会返回404，而将调用`next()`以执行下一个中间件，允许堆叠和回退。
 
+> 何谓倒退
+
 下表描述了可选的`options`对象中可配置的属性：
 
 |属性|描述|类型|默认值|
 | --- | --- | --- | --- |
-|`dotfiles`|决定该如何处理以点开头的文件|String|"ignore"|
+|`dotfiles`|决定如何看待以点开头的文件|String|"ignore"|
 |`etag`|是否生成`etag`,`express.static`始终生成弱校验Etags|Boolean|true|
 |`extensions`|设置文件的备选拓展名，如果一个文件没有找到则依据此处的设置寻找是否有其它后缀的文件并将发送第一个找到的文件，如`['html','htm']`|Mixed|false|
 |`fallthrough`|让客户端的错误作为未处理的请求，否则转发客户端错误,详见下文|Boolean|true|
@@ -125,13 +130,13 @@ app.use(express.static('public', options))
 var router = express.Router([options]);
 ```
 
-可选参数`option`的对象描述如下
+可选参数`option`对象中的属性如下
 
 | 属性  | 描述  | 默认值  | 兼容性 |
 | ---- | --- | ---- | ---- |
-|`caseSensitive`| 是否qiys 大小写敏感 | 默认不启用，意味着`/Foo`和`foo`是一样的||
+|`caseSensitive`| 是否启用大小写敏感 | 默认不启用，这意味着`/Foo`和`foo`是一样的||
 |`mergeParams`|是否保存父路由中的`req.params`值，如果相互冲突，取子路由中的值|`false`|4.5.0+|
-|`strict`|启用应该匹配|默认禁止，`/foo`和`/foo/`的响应一致||
+|`strict`|是否启用严格匹配|默认禁止，`/foo`和`/foo/`的响应一致||
 
 你可以像对待`express`应用一样，给router添加中间件和各种方法。
 
@@ -141,15 +146,15 @@ var router = express.Router([options]);
 
 这是Express提供的一个内置中间件，它基于[body-parser](http://expressjs.com/en/resources/middleware/body-parser.html)解析传入的请求为`urlencoded`格式。
 
-返回只解析urlencoded的中间件,而且只查看`Content-Type header`与类型选项匹配的请求。这个解析器只接收 `UTF-8`编码的`body`,支持自动的解压`gzip`和压缩编码。
+返回只解析urlencoded的中间件,而且只解析请求头的`Content-Type`与`type`匹配的请求。此解析器只接收 `UTF-8`编码格式的`body`,支持自动解压`gzip`和压缩编码。
 
-进过此中间件处理后，会返回一个新的包含解析数据的`body`对象（如`req.body`）,如果没有`body`可供解析或`Content-Type`不匹配或发生了错误则会返回一个空对象`({})`。对象可以包含键值对，值可以是字符串或者数组（当extended为false时），或者其它任意类型（当extended为true时）。
+进过此中间件处理后，会返回`response`对象中将包含`body`对象（如`req.body`）其中包含解析所得数据,如果没有`body`可供解析或`Content-Type`不匹配或发生错误则会返回一个空对象`({})`。对象的值可以是字符串或者数组（当extended为false时），或者其它任意类型（当extended为true时）。
 
 下表描述了可选的`options`对象中可配置的属性：
 
 |属性  |描述  |类型 | 默认值|
 | --- | --- | --- | --- |
-|`extended`|此选项用以决定使用`querystring`库（`false`时）还是`qs`库（`true`时）来解析`URL-encoded`数据。“extended”语法允许将对象和数组编码为URL格式，从而达到使用URL编码的类似获得类似JSON的体验。查看[qs](https://www.npmjs.com/package/qs#readme)了解更多信息|Boolean|true|
+|`extended`|此选项将决定会使用`querystring`库（`false`时）还是`qs`库（`true`时）来解析`URL-encoded`数据。“extended”语法允许将对象和数组编码为URL格式，从而达到使用URL编码的类似获得类似JSON的体验。查看[qs](https://www.npmjs.com/package/qs#readme)了解更多信息|Boolean|true|
 |`inflate`|是否允许处理压缩的请求体，当设置为false时，压缩请求体的请求会被拒绝|Boolean|true|
 |`limit`| 控制请求体的大小，如果是一个数值，为指定的字节数，如果是一个字符串，该值会被传给[bytes](https://www.npmjs.com/package/bytes)库进行解析 | Mixed |"100kb"|
 |`parameterLimit`|该选项控制URL编码数据中允许的最大参数数量。如果一个请求包含比这个值更多的参数，将会引发一个错误。|Bumber|1000|
@@ -174,20 +179,20 @@ app.listen(3000);
 
 `app`对象具备以下方法：
 
-- 为 http 请求提供可选择的路由，比如说可以查看[`app.METHOD`](http://expressjs.com/en/4x/api.html#app.METHOD)和[`app.param`](http://expressjs.com/en/4x/api.html#app.param);
+- 依据`http`请求路径注册处理函数，可查看[`app.METHOD`](http://expressjs.com/en/4x/api.html#app.METHOD)和[`app.param`](http://expressjs.com/en/4x/api.html#app.param);
 - 配置中间件，见[app.route](http://expressjs.com/en/4x/api.html#app.route);
 - 渲染html视图，见[app.render](http://expressjs.com/en/4x/api.html#app.render)
-- 注册目标引擎，见[app.engine](http://expressjs.com/en/4x/api.html#app.engine)
+- 设置模板渲染引擎，见[app.engine](http://expressjs.com/en/4x/api.html#app.engine)
 
 app对象还提供一些其它的影响应用行为的配置，可以查看[Application settings](http://expressjs.com/en/4x/api.html#app.settings.table)了解更多信息。
 
-> Express appliaction 对象可以分别以 `req.app` 和 `res.app` 引用自 `request对象` 和 `response对象`。
+> Express appliaction 对象可以分别以 `req.app` 和 `res.app` 指向 `request对象` 和 `response对象`。
 
 ### 属性
 
 #### `app.locals`
 
-`app.locals`对象以应用内部变量做为属性
+`app.locals`是一个对象，其以app内部的各变量为属性
 
 ```js
 app.locals.title
@@ -197,9 +202,9 @@ app.locals.email
 // => 'me@myapp.com'
 ```
 
-一旦设置，`app.locals`属性将在整个应用的生命周期内有效，相比而言`res.locals`的属性值则只在请求的生命周期内有效。
+一旦设置，`app.locals`属性将在整个应用的生命周期内有效，相比而言`res.locals`的属性值则只在某请求的生命周期内有效。
 
-你可以在应用渲染的模板中访问本地变量。这在提供模板的辅助函数及应用级别的数据时非常有用，本地变量在中间件中可以通过`req.app.locals`访问（详见[`req.app`](http://expressjs.com/en/4x/api.html#req.app)）
+你可以在app渲染的模板的过程中访问本地变量。这样就可以为模板提供辅助函数及app级别的数据，app本地变量在中间件中可以通过`req.app.locals`访问（详见[`req.app`](http://expressjs.com/en/4x/api.html#req.app)）
 
 ```js
 app.locals.title = 'My App';
@@ -209,9 +214,9 @@ app.locals.email = 'me@myapp.com';
 
 #### `app.mountpath`
 
-`app.mountpath`属性包含一个或者多个关于那个sub-app将被加载的路径模式。
+`app.mountpath`属性用以表示某`sub-app`所匹配的一个或多个路径模式。
 
-> sub-app指的是用于处理对路由的请求的`express`的实例。
+> `sub-app`指的是用于处理对路由的请求的`express`的实例。
 
 ```js
 var express = require('express');
@@ -229,7 +234,7 @@ app.use('/admin', admin); // mount the sub app
 
 它和`req`对象提供的[`baseUrl`](http://expressjs.com/en/4x/api.html#req.baseUrl)功能类似，不同之处在于`req.baseUrl`返回的是匹配的URL路径而非匹配模式。
 
-如果一个sub-app以多种路径模式加载，`app.mountpath`将返回一个模式的列表
+如果一个`sub-app`有多种路径匹配模式，`sub-app.mountpath`将返回一个模式的列表
 
 ```js
 var admin = express();
@@ -249,13 +254,14 @@ admin.use('/secr*t', secret); // load the 'secret' router on '/secr*t', on the '
 app.use(['/adm*n', '/manager'], admin); // load the 'admin' router on '/adm*n' and '/manager', on the parent app
 ```
 
-> 次级app还可以再拥有次级app，如果如此，那次级app和router的区别在哪儿呢？
+> 次级app还可以再拥有次级app，如果如此，那次级`app`和`router`的区别在哪儿呢？
+> `router`其实只具备部分功能，`sub-app`具备全部功能
 
 ### Events
 
 #### `app.on('mount',callback(parent))`
 
-`mount`事件在`sub-app`挂载（mount）到父app时触发，父app会被参数传入回调函数中。
+`mount`事件在`sub-app`挂载（mount）到父app时触发，父app会当做参数传入回调函数中。
 
 > **Note:**
 > Sub-app将：
@@ -282,7 +288,7 @@ app.use('/admin', admin);
 
 #### `app.all(path,callback[,callback])`
 
-此方法类似标准的[`app.MEYHOD()`](http://expressjs.com/zh-cn/4x/api.html#app.METHOD)方法，不同的地方在于它将匹配所有的`http`请求。
+此方法类似标准的[`app.MEYHOD()`](http://expressjs.com/zh-cn/4x/api.html#app.METHOD)方法，不同的地方在于它将匹配所有类型的`http`请求。
 
 ##### 参数
 
@@ -311,7 +317,7 @@ app.use('/admin', admin);
 > 
 > 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你也可以把它们当做中间件使用。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -339,7 +345,7 @@ app.all('*', requireAuthentication);
 app.all('*', loadUser);
 ```
 
-下面还有另外一个非常好用的全局函数示例，这个例子和上面那个类似，但是严格限制路径以`/api`开头
+下面还有另外一个非常有用的`app.all`使用示例，此例和上面的例子类似，但是严格限制路径以`/api`开头
 
 ```js
 app.all('/api/*', requireAuthentication);
@@ -347,7 +353,7 @@ app.all('/api/*', requireAuthentication);
 
 #### `app.delete(path, callback [, callback ...])`
 
-绑定针对某特定路径的HTTP DELETE请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
+为某路径的`HTTP DELETE`请求绑定特定的回调函数。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
 
 ##### 参数
 
@@ -356,28 +362,28 @@ app.all('/api/*', requireAuthentication);
 
 **描述：**
 
-> 中间件被触发的路径，可以是以下值中的一种：
+> 路径模式可以是以下类型中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
-> 	- 路径模式
-> 	- 上述值组成的数组
-> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+> 	- 通配符
+> 	- 上述类型值组成的数组
+> 点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)可查看更多实际的例子
 
 **参数2：** `callback`   **默认值：** `None`
 
 **描述：**
 
-> 回调函数可以是如下中的一种：
+> 回调函数可以是如下类型中的一种：
 > 
 > 	- 一个中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用中间件一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -392,7 +398,7 @@ app.delete('/', function (req, res) {
 
 #### `app.disable(name)`
 
-设置setting中的布尔值属性`name`值为`false`，`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。调用`app.set('foo',false)`和调用`app.disable('foo')`的效果一致：
+设置`setting`中的布尔值属性`name`的值为`false`，`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。调用`app.set('foo',false)`和调用`app.disable('foo')`的效果一致：
 
 如：
 
@@ -404,7 +410,7 @@ app.get('trust proxy');
 
 #### `app.disabled(name)`
 
-如果`setting`中的设置项`name`的值为`false`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
+判断`setting`中的设置项`name`的值是否为`false`,如果`setting`中的设置项`name`的值为`false`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
 
 ```js
 app.disabled('trust proxy');
@@ -427,7 +433,7 @@ app.get('trust proxy');
 
 #### `app.enabled(name)`
 
-如果`setting`中的设置项`name`的值为`true`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
+判断`setting`中的设置项`name`的值是否为`true`,如果`setting`中的设置项`name`的值为`true`则返回`true`,`name`是[app settings表](http://expressjs.com/zh-cn/4x/api.html#app.settings.table)中的值为布尔型的项。
 
 ```js
 app.enabled('trust proxy');
@@ -440,9 +446,9 @@ app.enabled('trust proxy');
 
 #### `app.engine(ext,callback)`
 
-注册给定的模板引擎的回调函数为`ext`。
+注册`ext`格式的模板的回调函数为`callback`。
 
-默认情况下，Express将会基于拓展名`require()`引擎，比如说，如果你渲染文件`foo.pug`,Express将在内部触发以下代码，并会为接下来的请求缓存`require()`以提高性能。
+默认情况下，Express会基于拓展名`require()`引擎，比如说，如果你渲染文件`foo.pug`,Express将在内部触发以下代码，并会为接下来的请求缓存`require()`以提高性能。
 
 ```js
 app.engine('pug', require('pug').__express);
@@ -450,9 +456,8 @@ app.engine('pug', require('pug').__express);
 
 对不提供直接可用的`.__express`的引擎，或者你想把不同的后缀映射到当前引擎可以使用下述方法，
 
-比如说，你想使用EJS引擎来渲染`.html`文件
-
 ```js
+// 使用EJS引擎来渲染`.html`文件
 app.engine('html', require('ejs').renderFile);
 ```
 
@@ -468,7 +473,7 @@ app.engine('html', engines.hogan);
 
 #### `app.get(name)`
 
-返回app setting 中相关的`name`的值，如：
+返回app setting 中相关属性`name`的值，如：
 
 ```js
 app.get('title');
@@ -481,7 +486,7 @@ app.get('title');
 
 #### `app.get(path,callback[,callback])`
 
-使用特定的回调函数处理特定路径的HTTP GET请求
+使用特定的回调函数处理特定路径的`HTTP GET`请求
 
 ##### 参数
 
@@ -492,7 +497,7 @@ app.get('title');
 
 > 中间件被触发的路径，可以是以下值中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
 > 	- 路径模式
 > 	- 上述值组成的数组
@@ -504,14 +509,14 @@ app.get('title');
 
 > 回调函数可以是如下中的一种：
 > 
-> 	- 一个中间件函数
+> 	- 中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用其他中间件功能一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -520,7 +525,7 @@ app.get('title');
 
 #### `app.listen(path,[callback])`
 
-启动UNIX套接字并侦听给定路径上的连接。此方法等同于Node的[`http.Server.listen()`](https://nodejs.org/api/http.html#http_server_listen_path_callback)方法.
+启动UNIX套接字并侦听指定路径上的连接。此方法等同于Node的[`http.Server.listen()`](https://nodejs.org/api/http.html#http_server_listen_path_callback)方法.
 
 ```js
 var express = require('express');
@@ -538,7 +543,7 @@ var app = express();
 app.listen(3000);
 ```
 
-由`express()`方法返回的`app`实际上是一个JavaScript `Function`,它被设计为传递给Node的HTTP servers作为回调函数来处理请求。由于 app 并没有什么继承，这使得可以非常方便使用同一套代码提供`http`或`https`版本的app。
+由`express()`方法返回的`app`实际上是一个JavaScript `Function`,它实际上被设计为传递给Node的`HTTP servers`作为回调函数来处理请求。由于 `app` 并没有什么继承，这使得可以非常方便使用同一套代码提供`http`或`https`版本的app。
 
 ```js
 var express = require('express');
@@ -550,7 +555,7 @@ http.createServer(app).listen(80);
 https.createServer(options, app).listen(443);
 ```
 
-`app.listen()`方法返回一个`http.Server`对象，对于`http`来说，它可以像下面这样非常容易使用
+`app.listen()`方法返回一个`http.Server`对象，对于`http`来说，它可以像下面这样使用
 
 ```js
 app.listen = function() {
@@ -570,28 +575,28 @@ app.listen = function() {
 
 **描述：**
 
-> 中间件被触发的路径，可以是以下值中的一种：
+> 路径模式可以是以下类型中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
-> 	- 路径模式
-> 	- 上述值组成的数组
-> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+> 	- 通配符
+> 	- 上述类型值组成的数组
+> 点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)可查看更多实际的例子
 
 **参数2：** `callback`   **默认值：** `None`
 
 **描述：**
 
-> 回调函数可以是如下中的一种：
+> 回调函数可以是如下类型中的一种：
 > 
 > 	- 一个中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用中间件一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -628,19 +633,19 @@ Express下述路由方法，它们和对应的HTTP方法具有相同的名称
 
 对于无效的JavaScript变量名类型，可以使用中括号来调用，比如`app['m-search']('/', function ....`
 
-> 如果没有在`app.get()`前指定`HTTP HEAD`对应的方法，将会调用`app.get()`响应`HEAD`请求。
+> 如果没有在`app.get()`前指定`HTTP HEAD`对应的方法，将会调用`app.get()`来响应`HEAD`请求。
 
-`app.all`并不对应某个特定的HTTP方法，而是会响应针对某个特定路径的所有请求，详细可[参看](http://expressjs.com/zh-cn/4x/api.html#app.all)。
+`app.all`会响应针对某个特定路径的所有请求，详细可[参看](http://expressjs.com/zh-cn/4x/api.html#app.all)。
 
 更多信息可参考[routing 指南](http://expressjs.com/guide/routing.html)
 
 #### `app.param([name],callback)`
 
-为路由参数添加回调函数，其中`name`是参数名或参数组成的数组，`callback`是回调函数。回调函数的参数依次是请求对象(request)，响应对象(response),下一个中间件，参数值及参数名。
+为路由的参数添加回调函数，其中`name`是参数名或由参数组成的数组，`callback`是回调函数。回调函数的参数依次是请求对象(request)，响应对象(response),下一个中间件，参数值及参数名。
 
-如果`name`是一个数组，回调函数会按照它们声明的顺序被注册到其中的每个值。此外除了最后一个声明的参数，回调函数中的`next`将会触发下一个注册参数的回调函数，而对于最后一个参数，`next`则会调用处理当前路由的下一个中间件，此时的处理就像`name`只是一个字符串一样。
+如果`name`是一个数组，回调函数会按照它们声明的顺序，依次注册到回调函数，此时除了此数据中的最后一项，回调函数中的`next`将会触发下一个注册参数的回调函数，而对于最后一个参数，`next`则会调用处理当前路由的下一个中间件，此时的处理逻辑和`name`只是一个字符串一样。
 
-比如说当`:user`存在于路由的路径中时，你可能想映射用户加载逻辑以自动提供`req.user`给路由或者对参数输入执行验证。
+下面的例子实现了当`:user`存在于路由的路径中时，在`req`对象中添加了`req.user`以供后期路由使用：
 
 ```js
 app.param('user', function(req, res, next, id) {
@@ -659,9 +664,9 @@ app.param('user', function(req, res, next, id) {
 });
 ```
 
-Param 回调函数对于它们定义的路由来说是本地的。它们不会被载入的app及router继承。因此，定义在`app`上的参数回调只会被定义在`app`路由上的路由参数触发。
+处理`Param`的回调函数对于包含它们的路由来说是本地的。因此不会被`app`或者其它的路由继承。
 
-所有的参数回调将会在任何匹配该路由的处理函数前触发，并且在一个请求响应周期内只会被触发一次，即使参数匹配了多个路由也是如此。
+`Param`回调函数会在在任何匹配了该路由的处理函数前触发，并且一个请求响应周期内只会被触发一次，即使参数匹配了多个路由也是如此。
 
 ```js
 app.param('id', function (req, res, next, id) {
@@ -733,11 +738,11 @@ console.log(blog.path()); // '/blog'
 console.log(blogAdmin.path()); // '/blog/admin'
 ```
 
-对于那些特别复杂加载了特别多`app`的程序，此行为会变得很复杂，通常情况下使用`req.baseUrl`来获取app规范路径更好。
+对于那些特别复杂加载了特别多`app`的程序，`app.path`的行为会变得很复杂，这种情况下使用`req.baseUrl`来获取路径更好。
 
 #### `app.post(path,callback[,callback])`
 
-绑定针对某特定路径的HTTP POST请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
+绑定针对某特定路径的`HTTP POST`请求到特定的回调函数上。更多信息可查看[路由指南](http://expressjs.com/guide/routing.html)。
 
 
 ##### 参数
@@ -747,28 +752,28 @@ console.log(blogAdmin.path()); // '/blog/admin'
 
 **描述：**
 
-> 中间件被触发的路径，可以是以下值中的一种：
+> 路径模式可以是以下类型中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
-> 	- 路径模式
-> 	- 上述值组成的数组
-> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+> 	- 通配符
+> 	- 上述类型值组成的数组
+> 点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)可查看更多实际的例子
 
 **参数2：** `callback`   **默认值：** `None`
 
 **描述：**
 
-> 回调函数可以是如下中的一种：
+> 回调函数可以是如下类型中的一种：
 > 
 > 	- 一个中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用中间件一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -793,28 +798,28 @@ app.post('/', function (req, res) {
 
 **描述：**
 
-> 中间件被触发的路径，可以是以下值中的一种：
+> 路径模式可以是以下类型中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
-> 	- 路径模式
-> 	- 上述值组成的数组
-> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+> 	- 通配符
+> 	- 上述类型值组成的数组
+> 点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)可查看更多实际的例子
 
 **参数2：** `callback`   **默认值：** `None`
 
 **描述：**
 
-> 回调函数可以是如下中的一种：
+> 回调函数可以是如下类型中的一种：
 > 
 > 	- 一个中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用中间件一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
 
@@ -847,7 +852,7 @@ app.render('email', { name: 'Tobi' }, function(err, html){
 
 #### `app.route(path)`
 
-返回单一路由的实例，你可以使用不同的可选中间件来处理不同类型的请求。使用`app.route()`可以避免重复的写路由名及由此造成的输入错误。
+返回单一路由的实例，可以链式的为不同的请求绑定不同的中间件处理函数。使用`app.route()`可以避免重复的写路由名及由此造成的输入错误。
 
 ```js
 var app = express();
@@ -867,7 +872,7 @@ app.route('/events')
 
 #### `app.set(name,value)`
 
-设置属性`name` 为 `value`,你可以保存任何你想用的值，不过一些特定名称被用来配置浏览器的行为。
+设置`setting`中的属性`name`的值为`value`。
 
 前面已经提到过，调用`app.set('foo',true)`设置布尔值为`true`与使用`app.enable('foo')`相同，类似的，调用`app.set('foo',false)`与`app.disable('foo')`相同。
 
@@ -880,12 +885,12 @@ app.get('title'); // "My Site"
 
 ##### 应用设定
 
-下表列出了应用设定
+下表列出了`app setting`的可选项
 
-请注意`sub-app`具有以下特征：
+注意`sub-app`具有以下特征：
 
 - 不会继承具有默认值的`settings`的值，其值必须在`sub-app`中设置；
-- 会继承没有默认值的值，这些会在下表中明确提到。
+- 会继承没有默认值的值，具体细节可见下表。
 
 例外： 
 
@@ -905,8 +910,8 @@ app.get('title'); // "My Site"
 |`subdomain offset`| Number | 为了获取子域名需要移除的由点隔开的部分|2|
 | `trust proxy` | Varied | 只是应用程序位于前置代理之后，使用`X-Forwarded-*`请求头来确定客户端的IP地址及连接，**注**：`X-Forwarded- *`标头容易伪造，检测到的IP地址不可靠。 启用后，Express会尝试确定通过前置代理或一系列代理连接的客户端的IP地址，`req.ips`属性将包含连接的客户端的IP地址组成的数组。要启用它，可以查看[trust proxy options table](http://expressjs.com/zh-cn/4x/api.html#trust.proxy.options.table);`trust proxy`的设置使用了[proxy-addr](https://www.npmjs.org/package/proxy-addr)包，可以查看其文档了解更多内容。 **注：** 尽管包含默认值，sub-apps会继承其值|`false(disabled)`|
 |`views`|String/Array| 供程序视图使用的一个或一组文件夹，如果是一个文件夹，将按照数组值的顺序查找 | `process.ced() + '/views'`|
-|`view cache`| Boolean | 启用视图模板汇编缓存，**注：**Sub-apps不会鸡翅此值在生产环境中的设置(当`NODE_ENV`设置为`producetion`时)。|生产环境上默认为`true`，否则为`undefined`|
-|`view engine`| String | 省略时使用默认的引擎拓展 **注：**Sub-app将继承此值的设置|`N/A(undefined)`|
+|`view cache`| Boolean | 启用视图模板汇编缓存，**注：**Sub-apps不会继承此值在生产环境中的设置(当`NODE_ENV`设置为`producetion`时为生产环节)。|生产环境上默认为`true`，否则为`undefined`|
+|`view engine`| String | 默认的视图处理引擎 **注：**Sub-app将继承此值的设置|`N/A(undefined)`|
 |`x-powered-by`|Boolean|启用`X-Powered-By:Express` HTTP 头部| `true`|
 
 ##### `trust proxy`的可用设置值
@@ -916,7 +921,7 @@ app.get('title'); // "My Site"
 |类型|值|
 |---|---|
 |`Boolean`|如果设置为`true`,客户端的IP地址将被认为是`X-Forwarded- *`头中最左边的条目，如果设置为`false`,后端应用被认为直接与互联网连接，并入客户端的`IP`地址可以从`req.connection.remoteAddress`中获取，这也是默认的设置。|
-|字符串/逗号分隔的字符串/字符串构成的数组|一个IP地址，`subnet`或者一组IP地址和一组可信任的子网的组合，以下列表显示了预配置的子网名称： `loopback - 127.0.0.1/8, ::1/128`,`linklocal - 169.254.0.0/16, fe80::/10`,`uniquelocal - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7`,你可以用下列方法设置IP地址,指定单一的子网 `app.set('trust proxy', 'loopback') `,指定一个子网及地址`app.set('trust proxy', 'loopback, 123.123.123.123') `,指定多个子网为CSV,`app.set('trust proxy', 'loopback, linklocal, uniquelocal') `,通过数组格式指定多个子网`app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])`,指定时，将从地址确定过程中排除IP地址或子网，并将离应用程序服务器最近的不可信IP地址确定为客户端的IP地址。|
+|字符串/逗号分隔的字符串/字符串构成的数组|一个IP地址，`subnet`或者一组IP地址和一组可信任的子网的组合，下面展示了预配置的子网名称： `loopback - 127.0.0.1/8, ::1/128`,`linklocal - 169.254.0.0/16, fe80::/10`,`uniquelocal - 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, fc00::/7`,你可以用下列方法设置IP地址,指定单一的子网 `app.set('trust proxy', 'loopback') `,指定一个子网及地址`app.set('trust proxy', 'loopback, 123.123.123.123') `,指定多个子网为CSV,`app.set('trust proxy', 'loopback, linklocal, uniquelocal') `,通过数组格式指定多个子网`app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal'])`,指定时，将从地址确定过程中排除IP地址或子网，并将离应用程序服务器最近的不可信IP地址确定为客户端的IP地址。|
 |`Number`| 信任从前置代理服务器作为客户端的第nth hop。|
 |`Function`| 自定义代理实现，只有当你知道你在做啥的时候才应该做这一步,实例如下|
 
@@ -929,9 +934,9 @@ app.set('trust proxy', function (ip) {
 
 #### `etag`选项的配置
 
-> **注意:** 这些设置只适用于动态生成的文件而不适于静态文件，`express.static`中间件将忽略这些设置。
+> **注意:** 这些设置只适用于动态生成的文件而不适用于静态文件，`express.static`中间件将忽略这些设置。
 > 
-> ETag功能是使用etag软件包实现的。有关更多信息，可参阅其[文档](https://www.npmjs.org/package/etag)。
+> ETag功能是使用`etag`库实现的。有关更多信息，可参阅其[文档](https://www.npmjs.org/package/etag)。
 
 |类型|值|
 |---|---|
@@ -953,39 +958,38 @@ app.set('etag', function (body, encoding) {
 
 **参数1：** `path`   **默认值：** `/`(root path)
 
-**参数描述：**
+**描述：**
 
-> 中间件被触发的路径，可以是以下值中的一种：
+> 路径模式可以是以下类型中的一种：
 > 
-> 	- 用字符串表达的路径
+> 	- 路径字符串
 > 	- 匹配路径的正则表达式
-> 	- 路径模式
-> 	- 上述值组成的数组
-> 可以点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)查看实际的例子
+> 	- 通配符
+> 	- 上述类型值组成的数组
+> 点击[Path examples](http://expressjs.com/zh-cn/4x/api.html#path-examples)可查看更多实际的例子
 
 **参数2：** `callback`   **默认值：** `None`
 
-**参数描述：**
+**描述：**
 
-> 回调函数可以是如下中的一种：
+> 回调函数可以是如下类型中的一种：
 > 
 > 	- 一个中间件函数
 > 	- 由逗号隔开的一系列中间件函数
 > 	- 一个由中间件函数构成的数组
 > 	- 上述情况的组合
 > 
-> 您可以提供多个回调函数，其行为与中间件类似，只不过这些回调可以调用next（'route'）来绕过剩余的路由回调。你可以使用此机制来决定应该使用哪个路由，如果没有继续使用当前路由的理由，则可以调到下一个路由。
+> 可以提供多个回调函数，多个回调函数的调用与多个中间件的调用类似，不同之处在于在回调函数中调用`next（'route'）`可绕过之后的回调函数。你可以基于此机制来觉得是否需要触发之后的回调函数
 > 
-> 由于[`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，因此你可以像使用其他中间件功能一样使用它们。
+> [`router`](http://expressjs.com/zh-cn/4x/api.html#router)和[`app`](http://expressjs.com/zh-cn/4x/api.html#application)都实现了中间件接口，你可以像使用中间件一样使用它们。
 > 
 > 可在[此处参考示例](http://expressjs.com/zh-cn/4x/api.html#middleware-callback-function-examples)
-> 
 
 **描述**
 
-路径将会匹配任何当前路径后面加`/`的路径，如`app.use('/apple',...)`将匹配`/apple`,`/apple/images`,`/apple/images/news`等等。
+将会匹配任何当前路径的子路径，如`app.use('/apple',...)`将匹配`/apple`,`/apple/images`,`/apple/images/news`等等。
 
-由于默认的路径就是`/`，如果不设置路径，所用中间件将响应每一个请求。
+`path`默认的值是`/`，如果不设置路径，所用中间件将响应每一个请求。
 
 比如说下述中间件函数将响应每一个请求
 
@@ -1017,9 +1021,9 @@ app.get('/', function (req, res) {
 
 #### 错误处理中间件
 
-错误处理中间件需要接受四个参数，使用时必须传入四个参数以证明这是个错误处理中间件。即使你用不上`next`,也需要在参数中包含它，这样才能满足此中间件的函数签名。否则会被当做普通的中间件而失去处理错误的能力。关于错误处理中间件的详细信息可以参考[这里](http://expressjs.com/en/guide/error-handling.html)。
+错误处理中间件需要接受四个参数，使用时必须传入四个参数以证明当前中间件时错误处理中间件。这四个参数中包含`next`,即使你用不上`next`,也需要在参数中包含它，这样才能满足错误处理中间件的函数签名。签名不对当前中间件会被当做普通的中间件使用而失去处理错误的能力。关于错误处理中间件的详细信息可以参考[这里](http://expressjs.com/en/guide/error-handling.html)。
 
-除了需要接受四个而非三个参数，错误处理中间件的定义和普通中间件一样，函数签名固定为`(err,req,res,next)`
+除了必须接受四个参数，错误处理中间件的定义和普通中间件一样，其函数签名固定为`(err,req,res,next)`
 
 ```js
 app.use(function(err, req, res, next) {
@@ -1190,7 +1194,7 @@ app.use(express.static(__dirname + '/uploads'));
 
 ## `Request`
 
-`req`对象代表的是`http`请求，并且具备由请求的`query`,参数，`body`,`HTTP headers`等解析而来的属性。按照惯例（此文档也是如此）这个对象会被解析为`req`(`HTTP`响应对象记为`res`),不过这个名字具体是什么还是依据回调函数中的定义。
+`req`对象代表的是`http`请求，该对象中包含由请求而来的`query`,参数，`body`,`HTTP headers`等解析而来的属性。按照惯例（此文档也是如此）请求对象会记为`req`(`HTTP`响应对象记为`res`),不过这个名字具体是什么还是依据回调函数中的定义。
 
 比如:
 
@@ -1218,7 +1222,7 @@ app.get('/user/:id', function(request, response) {
 
 此属性指向使用当前中间件的Express application。
 
-如果你遵照以下模式，在一个模块中导出一个中间件然后在主文件中`reequire()`这个中间件，则可以在中间件中通过`req.app`获取到使用它的`Express`实例。
+如果你遵照以下模式，在一个模块中导出一个中间件然后在主文件中`require()`这个中间件，则可以在中间件中通过`req.app`获取到当前的`Express`实例。
 
 比如：
 
@@ -1264,7 +1268,7 @@ app.use(['/gre+t', '/hel{2}o'], greet); // load the router on '/gre+t' and '/hel
 
 包含从`request body`中提交而来的键值对形式的数据。默认情况下，`req.body`的值为`undefined`,你需要使用如`body-parser`或`multer`这类body解析中间件来为其填充内容。
 
-下例展示了如何使用body解析中间件来扩充`req.body`中的内容：
+下例展示了如何使用`body`解析中间件来扩充`req.body`中的内容：
 
 ```js
 var app = require('express')();
@@ -1298,9 +1302,9 @@ req.cookies.name
 
 #### `req.fresh`
 
-表征当前请求是否“新鲜”，与`req.stale`相反。
+用以表征当前请求是否“新鲜”，与`req.stale`相反。
 
-如果`cache-control`请求头不是`no-cache`以及下面的每一项都不是`true`,则它的值为`true`.
+如果`cache-control`请求头不是`no-cache`并且下面的每一项的值都不是`true`,则它的值为`true`.
 
 - `if-modified-since`请求头是指定的，并且`last-modified`请求头等于或者早于`modified`响应头
 - `if-none-match`请求头为`*`;
@@ -1315,7 +1319,7 @@ req.fresh
 
 #### `req.hostname`
 
-包含中HOST `HTTP header`派生出来的主机名。
+用以表征从`HTTP header`派生出来的主机名。
 
 当`trust proxy` 不等于`false`时，此属性将使用`X-Forwarded-Host`header中的值，此值可以通过客户端或者代理设置。
 
@@ -1327,7 +1331,7 @@ req.hostname
 
 #### `req.ip`
 
-包含请求的远程`ip`。
+用以表征请求的远程`ip`。
 
 当`trust proxy`不为`false`时，此值将取自`X-Forwarded-For header.`最左侧，此请求头可以被客户端或者代理设置。
 
@@ -1350,7 +1354,7 @@ req.ip
 
 > `req.url`并非原生的Express属性，其继承自Node的http模块。
 
-此属性非常类似于`req.url`，不同之处在于，它保留了原始请求URL，允许你为了内部路由自由的重写`req.url`。比如说，`app.use()`的`mounting`功能将重写`req.url`来去除挂载点。
+此属性非常类似于`req.url`，不同之处在于，它保留了原始请求URL，允许你为内部路由重写`req.url`。比如说，可以使用`app.use()`的`mounting`功能来重写`req.url`以去除挂载点。
 
 ```js
 // GET /search?q=something
@@ -1387,7 +1391,7 @@ req.params[0]
 // => "javascripts/jquery.js"
 ```
 
-如果你需要对`req.params`中的键做改变，可以使用`app.param`处理器，更改仅适用于已经在路径路径中定义的参数。
+如果你需要对`req.params`中的键做改变，可以使用`app.param`处理器，更改仅适用于已经在路径中定义的参数。
 
 在中间件或路由处理函数中对`req.params`对象所做的任何更改都将被重置。
 
@@ -1407,7 +1411,7 @@ req.path
 
 #### `req.protocol`
 
-代表请求协议的字符串，可能是`http`或`https`。
+表征请求协议的字符串，可能是`http`或`https`。
 
 当`trust proxy` 不等于`false`时，此属性将使用`X-Forwarded-Host`header中的值，此值可以通过客户端或者代理设置。
 
@@ -1418,7 +1422,7 @@ req.protocol
 
 #### `req.query`
 
-此属性是包含路由中每个查询字符串参数的属性构成的对象。如果没有查询字符串，则为空对象`{}`。
+此属性通过解析查询字符串而生产的对象。如果没有查询字符串，则为空对象`{}`。
 
 ```js
 // GET /search?q=tobi+ferret
@@ -1438,7 +1442,7 @@ req.query.shoe.type
 
 #### `req.route`
 
-返回一个对象，用以表示当前匹配的路由，比如：
+返回一个对象，表示当前匹配的路由，比如：
 
 ```js
 app.get('/user/:id?', function userIdHandler(req, res) {
@@ -1464,7 +1468,7 @@ app.get('/user/:id?', function userIdHandler(req, res) {
 
 #### `req.secure`
 
-一个表征`TLS`连接是否建立的布尔值，等同于:
+表征`TLS`连接是否建立的布尔值，等同于:
 
 ```js
 'https' == req.protocol;
@@ -1472,9 +1476,9 @@ app.get('/user/:id?', function userIdHandler(req, res) {
 
 #### `req.signedCookies`
 
-当使用了[cookie-parser](https://www.npmjs.com/package/cookie-parser)中间件时，此属性包含请求带来的签名`cookies`,签名cookies位于不同的对象中用以表示开发者的意图，普通的cookie`req.cookie`容易被伪造儿存在恶意攻击，签名cookie并不会使cookie加密或者隐藏，但是会使得它难以被篡改（用于签名的`secret`是私密的）。
+当使用了[cookie-parser](https://www.npmjs.com/package/cookie-parser)中间件时，此属性包含请求带来的签名`cookies`，普通的cookie可通过`req.cookie`访问，但是容易被伪造存在恶意攻击的风险，签名cookie实际上并不会使cookie被加密或者隐藏，但是会使得它难以被篡改（用于签名的`secret`是私密的）。
 
-如果没有签名cookie，次属性值为`{}`。
+如果没有签名cookie，此属性的值为`{}`。
 
 ```js
 // Cookie: user=tobi.CP7AWaXDfAKIRfH49dQzKJx7sKzzSoPq7/AcBBRVwlI3
@@ -1486,7 +1490,7 @@ req.signedCookies.user
 
 #### `req.stale`
 
-指示请求是否是过时的，此属性是`req.fresh`的反面。更多信息可查看[req.fresh](http://expressjs.com/en/4x/api.html#req.fresh).
+表征此请求是否是过时，此属性是`req.fresh`的对立面。更多信息可查看[req.fresh](http://expressjs.com/en/4x/api.html#req.fresh).
 
 ```js
 req.stale
@@ -1495,7 +1499,7 @@ req.stale
 
 #### `req.subdomains`
 
-请求的域名的子域名构成的数组。
+表征请求域名的子域名构成的数组。
 
 ```js
 // Host: "tobi.ferrets.example.com"
@@ -1503,7 +1507,7 @@ req.subdomains
 // => ["ferrets", "tobi"]
 ```
 
-应用属性`subdomain offset`的默认值为2,用以确定子域名的起始位置。可通过`app.set`改变默认值。
+app settings 中 `subdomain offset` 的默认值为2,此值可以用来确定子域名的起始位置。可通过`app.set()`来改变默认值。
 
 #### `req.xhr`
 
@@ -1518,7 +1522,7 @@ req.xhr
 
 #### `req.accepts(types)`
 
-检测指定的内容类型是否被接受，结果基于HTTP中的`Accept`请求头。此方法返回最佳匹配值，如果都不匹配则返回`false`,这种情况下，应用的反馈值应该为406 `Not Acceptable`。
+检测指定的内容类型是否被接受，结果基于HTTP中的`Accept`请求头。此方法返回最佳匹配值，如果都不匹配则返回`false`,这种情况下，应用的状态码应该为406 `Not Acceptable`。
 
 `type`的值可以是单个的`MIME`类型字符串（比如说`application/json`），可以是拓展名如`json`,可以是由逗号分隔的列表，或者一个数组。如果是列表或者数组，则返回最佳的匹配值。
 
@@ -1684,7 +1688,7 @@ app.get('/', function (req, res) {
 
 #### `res.locals`
 
-包含请求范围内的响应本地变量。除了在请求/响应过程中视图渲染时可用，其余和 app.locals 功能一样。
+表示包含在请求生命周期内的本地变量。除了在请求/响应过程中视图渲染时可用，其余和 app.locals 功能一样。
 
 这个属性在暴露请求层面的信息时非常有用，比如 路径名, 授权用户, 用户设置等等。
 
