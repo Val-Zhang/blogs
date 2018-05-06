@@ -29,6 +29,8 @@
 
 其实还是很容易陷入懂了很多，动手却啥也不会的境地，学过的东西还是得用起来，此篇将记录通过编程对自己想法的实现
 
+- [terminal-lexicon - 在终端中查单词](https://github.com/zhangwang1990/terminal-lexicon) 
+
 
 ### 翻译篇
 
