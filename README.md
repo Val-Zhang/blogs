@@ -14,6 +14,8 @@
 
 目前的工作语言为JavaScript，平时也会写一些 python 代码，之后有机会还想再学学go。在语言篇中想要多写写基础知识不是那么容易写明白的事情。
 
+- [译 - JavaScript Dates 终极指南](https://github.com/Val-Zhang/blogs/blob/master/articles/base/JavaScript%20%E6%97%A5%E6%9C%9F%E5%AF%B9%E8%B1%A1%E7%BB%88%E6%9E%81%E6%8C%87%E5%8D%97.md)
+
 ### 工具篇
 
 > 工欲善其事必先利其器
