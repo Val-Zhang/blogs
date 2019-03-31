@@ -59,7 +59,7 @@ function createThunkMiddleware(extraArgument) {
   }
 ```
 
-上述代码使用函数参数的解构加上连用三个箭头函数，显得非常简洁，单同时也带来了理解的困难（这也是箭头函数的缺点之一）。把上述代码在[babel REPL](https://babeljs.io/repl/)中转译为ES5语法后，我们看到以下结果：
+上述代码使用函数参数的解构加上连用三个箭头函数，显得非常简洁，但同时也带来了理解的困难（这也是箭头函数的缺点之一）。把上述代码在[babel REPL](https://babeljs.io/repl/)中转译为ES5语法后，我们看到以下结果：
 
 ```js
 "use strict";
