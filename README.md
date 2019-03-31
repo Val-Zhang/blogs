@@ -24,6 +24,8 @@
 
 * [Git 深入一点点](https://github.com/zhangwang1990/blogs/issues/9)
 * [入门Webpack，看这篇就够了](https://www.jianshu.com/p/42e11515c10f)
+* [ESLint 工作原理探讨](https://zhuanlan.zhihu.com/p/53680918)
+* [图解浏览器的基本工作原理](https://zhuanlan.zhihu.com/p/47407398)
 
 ### 实践篇
 
@@ -41,6 +43,12 @@
 实在是遇到了很喜欢的外文，也会在此翻译。
 
 - [关于React-router v4 你所需要知道的一切](https://github.com/Val-Zhang/blogs/blob/master/articles/FE-Frameworks/%E5%85%B3%E4%BA%8E%20React%20Router4%EF%BC%8C%E4%BD%A0%E6%89%80%E9%9C%80%E8%A6%81%E7%9F%A5%E9%81%93%E7%9A%84%E4%B8%80%E5%88%87.md)
+
+
+### 读书笔记
+
+- [Learn JS Again - 读 Eloquent-JavaScript](https://zhuanlan.zhihu.com/p/58802358)
+
 
 ## 后记
 
